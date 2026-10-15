@@ -38,6 +38,20 @@
 
 ## 3. Frontend Test Results
 - **Test Runner**: Vitest (v5.0.4)
-- **Suite**: `src/app/app.spec.ts`
-- **Tests**: 2 passed (100%)
-- **Duration**: 2.38 seconds
+- **Total Test Files**: 7
+- **Total Tests**: 22
+- **Passed**: 22
+- **Failed**: 0
+- **Pass Rate**: 100.0%
+- **Duration**: 5.87 seconds
+
+| Test Spec File | Tested Component / Service | Tests Run | Pass | Fail | Execution Time |
+| :--- | :--- | :---: | :---: | :---: | :---: |
+| `app.spec.ts` | App Root & Router Outlet | 2 | 2 | 0 | 130ms |
+| `auth.service.spec.ts` | JWT Storage, Roles & Lifecycle | 4 | 4 | 0 | 118ms |
+| `auth.guard.spec.ts` | Route Protection & Redirect | 3 | 3 | 0 | 98ms |
+| `role.guard.spec.ts` | Role-Based Authorization Guard | 3 | 3 | 0 | 101ms |
+| `login.component.spec.ts` | Form Validation & Presets | 5 | 5 | 0 | 808ms |
+| `dashboard.component.spec.ts`| KPI & Currency Band Loading | 2 | 2 | 0 | 601ms |
+| `reports.component.spec.ts`  | Filter State & CSV Streaming | 3 | 3 | 0 | 969ms |
+

@@ -260,3 +260,36 @@ This document maintains an auditable, incremental log of engineering decisions, 
 - **Corrections Made**: Reordered overlap check before active record mutation in `SalaryService` for pure fail-fast transactional safety; updated error assertions.
 - **Human / Architect Review**: All 62 backend unit and integration tests verified.
 - **Final Outcome**: Milestone 12 complete. Ready for Git commit 12 (`test: add backend unit and integration tests`).
+
+---
+
+## Entry 13: Angular Unit Tests and Authorization Coverage
+- **Date**: 2026-10-15
+- **Module / Task**: Testing — Angular Unit, Component, and Guard Tests (Commit 13)
+- **Goal**: Implement thorough unit and authorization test coverage across the Angular frontend, validating token lifecycle, route guards, role permission checks, reactive login validation, dashboard compensation metric binding, and report filter handling.
+- **AI Tool Used**: Antigravity Assistant (Gemini 3.8 Flash High)
+- **Prompt Files**: `docs/ai/prompts/04-frontend-prompt.md`
+- **Main Changes Generated or Suggested**:
+  - `auth.service.spec.ts`: Tests authentication, access and refresh token storage, session clearance on logout, and role check computations (`isAdmin`, `isManager`, `isViewer`).
+  - `auth.guard.spec.ts`: Tests route guard allowing authenticated sessions and redirecting unauthenticated users to `/login`.
+  - `role.guard.spec.ts`: Tests role-based route guard permitting users with required role definitions and redirecting unauthorized users to `/dashboard`.
+  - `login.component.spec.ts`: Tests form validation, evaluator quick-fill credential buttons, successful login redirection, and error banner alerts on invalid credentials.
+  - `dashboard.component.spec.ts`: Tests loading of executive compensation overview metrics, currency breakdown cards, and currency distribution band switching.
+  - `reports.component.spec.ts`: Tests report filtering, reset to default active status, and sanitized CSV download triggering.
+  - Updated `docs/testing/test-results.md` with comprehensive 22-test breakdown.
+- **Files Changed**:
+  - `frontend/src/app/core/services/auth.service.spec.ts`
+  - `frontend/src/app/core/guards/auth.guard.spec.ts`
+  - `frontend/src/app/core/guards/role.guard.spec.ts`
+  - `frontend/src/app/features/auth/login/login.component.spec.ts`
+  - `frontend/src/app/features/dashboard/dashboard.component.spec.ts`
+  - `frontend/src/app/features/reports/reports.component.spec.ts`
+  - `docs/testing/test-results.md`
+  - `docs/ai/AI_WORKLOG.md`
+- **Tests Executed**:
+  - `cmd /c "npm.cmd test -- --watch=false"`: 7 test files, 22 tests passing, 0 failures, 100% pass rate in 5.87s.
+  - `cmd /c "npm.cmd run build"`: Full production bundle generation succeeded in 6.35s.
+- **Problems Discovered**: None. All mock providers and component fixtures initialized cleanly.
+- **Corrections Made**: N/A.
+- **Human / Architect Review**: All frontend testing and authorization requirements verified. Ready for Commit 13.
+- **Final Outcome**: Milestone 13 complete. Ready for Git commit 13 (`test: add Angular tests and authorization coverage`).
