@@ -129,13 +129,32 @@ This document maintains an auditable, incremental log of engineering decisions, 
 - **Main Changes Generated or Suggested**:
   - `AuditController.java`: Endpoint `GET /api/v1/audit-logs` secured with `@PreAuthorize("hasAuthority('ROLE_HR_ADMIN')")`, supporting filtering by entityName, entityId, and actor.
   - `AuditControllerIntegrationTest.java`: Verified HR_ADMIN access, 403 Forbidden for HR_MANAGER and HR_VIEWER, and proper pagination/filtering.
+- **Tests Executed**: 29 tests executed, 0 failures, 0 errors, 100% passed.
+- **Outcome**: Milestone 8 complete. Git commit `54cbf51` created.
+
+---
+
+## Entry 09: Dashboard Analytics, Tabular Reports & Safe CSV Export
+- **Date**: 2026-10-15
+- **Module / Task**: Modules D & E — Dashboard Analytics & Reports
+- **Goal**: Implement real-time SQL-level compensation analytics strictly segregated by currency, headcount distributions by country/department, salary bands, filtered reports, and streaming CSV export protected against CSV formula injection.
+- **AI Tool Used**: Antigravity Assistant (Gemini 3.8 Flash High)
+- **Prompt Files**: `docs/ai/prompts/03-backend-prompt.md`
+- **Main Changes Generated or Suggested**:
+  - `CsvSanitizer.java`: Escapes CSV formula injection triggers (`=`, `+`, `-`, `@`, `\t`, `\r`) with leading single quotes.
+  - `AnalyticsRepository.java`: Optimized SQL `GROUP BY` aggregation queries for headcount, min/max/avg compensation per currency, and salary bands.
+  - `AnalyticsService.java` & `AnalyticsController.java`: REST endpoints `/api/v1/analytics/overview`, `/by-country`, `/by-department`, `/salary-distribution`.
+  - `ReportService.java` & `ReportController.java`: Criteria-based dynamic filtered reports (`/api/v1/reports/salaries`) and streaming chunked CSV exports (`/api/v1/reports/salaries/export`) with Apache Commons CSV.
+  - Comprehensive unit tests (`CsvSanitizerTest`, `AnalyticsServiceTest`) and integration tests (`AnalyticsControllerIntegrationTest`, `ReportControllerIntegrationTest`).
 - **Files Changed**:
-  - `backend/src/main/java/com/acme/salary/audit/controller/AuditController.java`
-  - `backend/src/test/java/com/acme/salary/audit/controller/AuditControllerIntegrationTest.java`
+  - `backend/src/main/java/com/acme/salary/reports/**`
+  - `backend/src/main/java/com/acme/salary/analytics/**`
+  - `backend/src/test/java/com/acme/salary/reports/**`
+  - `backend/src/test/java/com/acme/salary/analytics/**`
   - `docs/ai/AI_WORKLOG.md`
 - **Tests Executed**:
-  - `mvnw.cmd test`: 29 tests executed, 0 failures, 0 errors, 100% passed.
-- **Problems Discovered**: None.
+  - `mvnw.cmd test`: 45 tests executed, 0 failures, 0 errors, 100% passed.
+- **Problems Discovered**: None. All aggregations and streaming CSV validations passed.
 - **Corrections Made**: N/A.
-- **Human / Architect Review**: Append-only audit integrity verified. HR_ADMIN isolation confirmed. Ready for Commit 8.
-- **Final Outcome**: Milestone 8 complete. Ready for Git commit 8 (`feat: add salary audit logging`).
+- **Human / Architect Review**: All currency-segregated rules, annualized frequency calculations, and OWASP formula injection defenses verified. Ready for Commit 9.
+- **Final Outcome**: Milestone 9 complete. Ready for Git commit 9 (`feat: implement dashboard analytics and reports`).
