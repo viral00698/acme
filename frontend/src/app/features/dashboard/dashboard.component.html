@@ -1,0 +1,173 @@
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <div class="header-titles">
+      <h1 class="page-title">Executive Compensation Dashboard</h1>
+      <p class="page-subtitle">Real-time organization metrics and salary analytics across all operational entities</p>
+    </div>
+    <button mat-stroked-button color="primary" (click)="loadData()" [disabled]="isLoading()">
+      <mat-icon>refresh</mat-icon> Refresh Data
+    </button>
+  </div>
+
+  <div class="loading-state" *ngIf="isLoading()">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Calculating live compensation metrics...</p>
+  </div>
+
+  <div *ngIf="!isLoading()">
+    <!-- KPI Overview Cards -->
+    <div class="kpi-grid">
+      <mat-card class="kpi-card">
+        <div class="kpi-icon-wrapper blue">
+          <mat-icon>people</mat-icon>
+        </div>
+        <div class="kpi-content">
+          <span class="kpi-label">Active Employees</span>
+          <span class="kpi-value">{{ overview()?.totalActiveEmployees | number }}</span>
+        </div>
+      </mat-card>
+
+      <mat-card class="kpi-card">
+        <div class="kpi-icon-wrapper green">
+          <mat-icon>corporate_fare</mat-icon>
+        </div>
+        <div class="kpi-content">
+          <span class="kpi-label">Departments</span>
+          <span class="kpi-value">{{ overview()?.totalDepartments }}</span>
+        </div>
+      </mat-card>
+
+      <mat-card class="kpi-card">
+        <div class="kpi-icon-wrapper amber">
+          <mat-icon>public</mat-icon>
+        </div>
+        <div class="kpi-content">
+          <span class="kpi-label">Operational Countries</span>
+          <span class="kpi-value">{{ overview()?.totalCountries }}</span>
+        </div>
+      </mat-card>
+
+      <mat-card class="kpi-card">
+        <div class="kpi-icon-wrapper purple">
+          <mat-icon>currency_exchange</mat-icon>
+        </div>
+        <div class="kpi-content">
+          <span class="kpi-label">Payroll Currencies</span>
+          <span class="kpi-value">{{ overview()?.activeCurrenciesCount }}</span>
+        </div>
+      </mat-card>
+    </div>
+
+    <!-- Currency Isolation Notice -->
+    <div class="info-banner">
+      <mat-icon>verified_user</mat-icon>
+      <div>
+        <strong>Compensation Segregation Principle:</strong>
+        To prevent distorted aggregations, salaries are strictly evaluated within their native currency. Cross-currency amounts are never conflated without normalized exchange conversion.
+      </div>
+    </div>
+
+    <!-- Currency Compensation Cards -->
+    <h2 class="section-title">Annualized Compensation by Currency</h2>
+    <div class="currency-grid">
+      <mat-card class="currency-card" *ngFor="let curr of overview()?.currencySummaries">
+        <div class="currency-card-header">
+          <div class="currency-badge">
+            <span class="symbol">{{ curr.currencySymbol }}</span>
+            <span class="code">{{ curr.currencyCode }}</span>
+          </div>
+          <span class="headcount">{{ curr.employeeCount | number }} Employees</span>
+        </div>
+
+        <div class="currency-metrics">
+          <div class="metric-row">
+            <span class="metric-label">Average:</span>
+            <span class="metric-val primary">{{ curr.currencySymbol }}{{ curr.avgSalary | number:'1.2-2' }}</span>
+          </div>
+          <div class="metric-subrow">
+            <div>
+              <span class="sublabel">Min:</span>
+              <span class="subval">{{ curr.currencySymbol }}{{ curr.minSalary | number:'1.0-0' }}</span>
+            </div>
+            <div>
+              <span class="sublabel">Max:</span>
+              <span class="subval">{{ curr.currencySymbol }}{{ curr.maxSalary | number:'1.0-0' }}</span>
+            </div>
+          </div>
+          <div class="metric-row total-spend">
+            <span class="metric-label">Total Annual Spend:</span>
+            <span class="metric-val">{{ curr.currencySymbol }}{{ curr.totalAnnualSpend | number:'1.0-0' }}</span>
+          </div>
+        </div>
+      </mat-card>
+    </div>
+
+    <!-- Distribution & Breakdowns Grid -->
+    <div class="distribution-grid">
+      <!-- Salary Distribution Chart / Bands -->
+      <mat-card class="distribution-card">
+        <div class="card-header-with-actions">
+          <div>
+            <h3 class="card-title">Salary Band Distribution</h3>
+            <span class="card-subtitle">Headcount distribution grouped by compensation bands</span>
+          </div>
+
+          <mat-form-field appearance="outline" class="currency-selector" subscriptSizing="dynamic">
+            <mat-label>Currency</mat-label>
+            <mat-select [value]="selectedCurrency()" (selectionChange)="onCurrencyChange($event.value)">
+              <mat-option *ngFor="let c of overview()?.currencySummaries" [value]="c.currencyCode">
+                {{ c.currencyCode }} ({{ c.currencySymbol }})
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="bands-container" *ngIf="salaryBands().length > 0; else noBands">
+          <div class="band-row" *ngFor="let band of salaryBands()">
+            <div class="band-label">
+              <strong>{{ band.bandName }}</strong>
+            </div>
+            <div class="band-bar-wrapper">
+              <div class="band-bar" [style.width.%]="getBandPercentage(band.employeeCount)"></div>
+            </div>
+            <div class="band-count">
+              <span>{{ band.employeeCount | number }}</span>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #noBands>
+          <div class="empty-state">
+            <mat-icon>bar_chart</mat-icon>
+            <p>No distribution records found for {{ selectedCurrency() }}.</p>
+          </div>
+        </ng-template>
+      </mat-card>
+
+      <!-- Department Breakdown Table -->
+      <mat-card class="breakdown-card">
+        <h3 class="card-title">Department Headcounts</h3>
+        <span class="card-subtitle">Active workforce allocated across core divisions</span>
+
+        <div class="table-scroll">
+          <table mat-table [dataSource]="departments()" class="mat-elevation-z0">
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>Department</th>
+              <td mat-cell *matCellDef="let element"><strong>{{ element.departmentName }}</strong></td>
+            </ng-container>
+
+            <ng-container matColumnDef="employees">
+              <th mat-header-cell *matHeaderCellDef class="text-right">Employees</th>
+              <td mat-cell *matCellDef="let element" class="text-right">
+                <span class="count-badge">{{ element.employeeCount | number }}</span>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="departmentColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: departmentColumns;"></tr>
+          </table>
+        </div>
+      </mat-card>
+    </div>
+  </div>
+</div>

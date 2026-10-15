@@ -64,3 +64,22 @@ html, body {
     background-color: #cff4fc;
   }
 }
+
+/* Snackbars */
+.snackbar-success {
+  --mdc-snackbar-container-color: #065f46;
+  --mat-snack-bar-button-color: #a7f3d0;
+  color: #ffffff;
+}
+
+.snackbar-error {
+  --mdc-snackbar-container-color: #991b1b;
+  --mat-snack-bar-button-color: #fecaca;
+  color: #ffffff;
+}
+
+.snackbar-info {
+  --mdc-snackbar-container-color: #1e40af;
+  --mat-snack-bar-button-color: #bfdbfe;
+  color: #ffffff;
+}

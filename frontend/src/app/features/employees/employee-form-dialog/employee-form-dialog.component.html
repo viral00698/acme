@@ -1,0 +1,103 @@
+<h2 mat-dialog-title>
+  {{ data.isEdit ? 'Edit Employee Profile' : 'Add New Employee' }}
+</h2>
+
+<mat-dialog-content class="dialog-content">
+  <div class="error-banner" *ngIf="errorMessage()">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <form [formGroup]="employeeForm" class="form-grid">
+    <mat-form-field appearance="outline" class="form-field">
+      <mat-label>Employee Code</mat-label>
+      <input matInput formControlName="employeeCode" placeholder="e.g. EMP-10001">
+      <mat-error *ngIf="employeeForm.get('employeeCode')?.hasError('required')">
+        Employee code is required
+      </mat-error>
+      <mat-error *ngIf="employeeForm.get('employeeCode')?.hasError('pattern')">
+        3-20 letters, numbers, or dashes
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form-field">
+      <mat-label>Hire Date</mat-label>
+      <input matInput type="date" formControlName="hireDate">
+      <mat-error *ngIf="employeeForm.get('hireDate')?.hasError('required')">
+        Hire date is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form-field">
+      <mat-label>First Name</mat-label>
+      <input matInput formControlName="firstName" placeholder="First name">
+      <mat-error *ngIf="employeeForm.get('firstName')?.hasError('required')">
+        First name is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form-field">
+      <mat-label>Last Name</mat-label>
+      <input matInput formControlName="lastName" placeholder="Last name">
+      <mat-error *ngIf="employeeForm.get('lastName')?.hasError('required')">
+        Last name is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form-field full-row">
+      <mat-label>Work Email</mat-label>
+      <input matInput type="email" formControlName="email" placeholder="name@acme.com">
+      <mat-icon matPrefix>email</mat-icon>
+      <mat-error *ngIf="employeeForm.get('email')?.hasError('required')">
+        Work email is required
+      </mat-error>
+      <mat-error *ngIf="employeeForm.get('email')?.hasError('email')">
+        Enter a valid email address
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form-field">
+      <mat-label>Department</mat-label>
+      <mat-select formControlName="departmentId" (selectionChange)="onDepartmentChange($event.value)">
+        <mat-option *ngFor="let dept of departments()" [value]="dept.id">
+          {{ dept.name }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="employeeForm.get('departmentId')?.hasError('required')">
+        Department is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form-field">
+      <mat-label>Country</mat-label>
+      <mat-select formControlName="countryId">
+        <mat-option *ngFor="let country of countries()" [value]="country.id">
+          {{ country.name }} ({{ country.isoCode }})
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="employeeForm.get('countryId')?.hasError('required')">
+        Country is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form-field full-row">
+      <mat-label>Job Title</mat-label>
+      <mat-select formControlName="jobTitleId">
+        <mat-option *ngFor="let title of jobTitles()" [value]="title.id">
+          {{ title.title }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="employeeForm.get('jobTitleId')?.hasError('required')">
+        Job title is required
+      </mat-error>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="dialog-actions">
+  <button mat-button (click)="onCancel()" [disabled]="isLoading()">Cancel</button>
+  <button mat-flat-button color="primary" (click)="onSubmit()" [disabled]="isLoading() || employeeForm.invalid">
+    <mat-spinner diameter="20" *ngIf="isLoading()"></mat-spinner>
+    <span *ngIf="!isLoading()">{{ data.isEdit ? 'Save Changes' : 'Create Employee' }}</span>
+  </button>
+</mat-dialog-actions>

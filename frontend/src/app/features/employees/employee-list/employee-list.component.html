@@ -1,0 +1,168 @@
+<div class="employee-list-container">
+  <div class="header-section">
+    <div>
+      <h1 class="page-title">Employee Directory</h1>
+      <p class="page-subtitle">Manage personnel profiles, track organizational alignment, and view salary records</p>
+    </div>
+
+    <button mat-flat-button color="primary" class="add-btn" *ngIf="authService.isManager()" (click)="openAddEmployeeDialog()">
+      <mat-icon>person_add</mat-icon> Add Employee
+    </button>
+  </div>
+
+  <!-- Filters Card -->
+  <mat-card class="filter-card">
+    <form [formGroup]="filterForm" class="filter-form">
+      <mat-form-field appearance="outline" class="search-field" subscriptSizing="dynamic">
+        <mat-label>Search directory</mat-label>
+        <input matInput formControlName="search" placeholder="Search by name, code, or email...">
+        <mat-icon matPrefix>search</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field" subscriptSizing="dynamic">
+        <mat-label>Department</mat-label>
+        <mat-select formControlName="departmentId">
+          <mat-option [value]="null">All Departments</mat-option>
+          <mat-option *ngFor="let dept of departments()" [value]="dept.id">
+            {{ dept.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field" subscriptSizing="dynamic">
+        <mat-label>Country</mat-label>
+        <mat-select formControlName="countryId">
+          <mat-option [value]="null">All Countries</mat-option>
+          <mat-option *ngFor="let c of countries()" [value]="c.id">
+            {{ c.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field" subscriptSizing="dynamic">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="status">
+          <mat-option [value]="null">All Statuses</mat-option>
+          <mat-option value="ACTIVE">ACTIVE</mat-option>
+          <mat-option value="INACTIVE">INACTIVE</mat-option>
+          <mat-option value="ON_LEAVE">ON_LEAVE</mat-option>
+          <mat-option value="TERMINATED">TERMINATED</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <button mat-stroked-button class="clear-btn" type="button" (click)="clearFilters()">
+        <mat-icon>clear_all</mat-icon> Reset
+      </button>
+    </form>
+  </mat-card>
+
+  <!-- Table Card -->
+  <mat-card class="table-card">
+    <div class="table-loading-shade" *ngIf="isLoading()">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+
+    <div class="table-responsive">
+      <table mat-table [dataSource]="employees()" matSort (matSortChange)="onSortChange($event)">
+        <!-- Employee Code -->
+        <ng-container matColumnDef="employeeCode">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Code</th>
+          <td mat-cell *matCellDef="let emp">
+            <a class="code-link" (click)="viewDetails(emp)">{{ emp.employeeCode }}</a>
+          </td>
+        </ng-container>
+
+        <!-- Full Name -->
+        <ng-container matColumnDef="fullName">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="firstName">Full Name</th>
+          <td mat-cell *matCellDef="let emp">
+            <strong>{{ emp.firstName }} {{ emp.lastName }}</strong>
+          </td>
+        </ng-container>
+
+        <!-- Email -->
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Email</th>
+          <td mat-cell *matCellDef="let emp" class="email-cell">{{ emp.email }}</td>
+        </ng-container>
+
+        <!-- Department -->
+        <ng-container matColumnDef="departmentName">
+          <th mat-header-cell *matHeaderCellDef>Department</th>
+          <td mat-cell *matCellDef="let emp">{{ emp.departmentName }}</td>
+        </ng-container>
+
+        <!-- Country -->
+        <ng-container matColumnDef="countryName">
+          <th mat-header-cell *matHeaderCellDef>Country</th>
+          <td mat-cell *matCellDef="let emp">{{ emp.countryName }}</td>
+        </ng-container>
+
+        <!-- Job Title -->
+        <ng-container matColumnDef="jobTitle">
+          <th mat-header-cell *matHeaderCellDef>Job Title</th>
+          <td mat-cell *matCellDef="let emp">{{ emp.jobTitle }}</td>
+        </ng-container>
+
+        <!-- Status -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+          <td mat-cell *matCellDef="let emp">
+            <span class="badge" [ngClass]="{
+              'badge-success': emp.status === 'ACTIVE',
+              'badge-danger': emp.status === 'TERMINATED',
+              'badge-warning': emp.status === 'ON_LEAVE',
+              'badge-info': emp.status === 'INACTIVE'
+            }">
+              {{ emp.status }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Actions -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef class="actions-header">Actions</th>
+          <td mat-cell *matCellDef="let emp" class="actions-cell">
+            <button mat-icon-button [matMenuTriggerFor]="actionMenu" aria-label="Actions">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+
+            <mat-menu #actionMenu="matMenu">
+              <button mat-menu-item (click)="viewDetails(emp)">
+                <mat-icon color="primary">visibility</mat-icon>
+                <span>View Details & Salaries</span>
+              </button>
+              <button mat-menu-item *ngIf="authService.isManager()" (click)="openEditEmployeeDialog(emp)">
+                <mat-icon>edit</mat-icon>
+                <span>Edit Profile</span>
+              </button>
+              <button mat-menu-item *ngIf="authService.isManager()" (click)="openStatusDialog(emp)">
+                <mat-icon>change_circle</mat-icon>
+                <span>Change Status</span>
+              </button>
+            </mat-menu>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="employee-row"></tr>
+
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell empty-table" [attr.colspan]="displayedColumns.length">
+            <mat-icon>search_off</mat-icon>
+            <p>No employee records found matching current criteria.</p>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <mat-paginator
+      [length]="totalElements()"
+      [pageSize]="pageSize()"
+      [pageIndex]="pageIndex()"
+      [pageSizeOptions]="[10, 20, 50, 100]"
+      (page)="onPageChange($event)"
+      showFirstLastButtons>
+    </mat-paginator>
+  </mat-card>
+</div>

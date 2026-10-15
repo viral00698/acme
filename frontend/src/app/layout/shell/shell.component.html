@@ -1,0 +1,86 @@
+<mat-sidenav-container class="sidenav-container">
+  <mat-sidenav #drawer class="sidenav" fixedInViewport [opened]="true" mode="side">
+    <div class="brand-container">
+      <div class="brand-logo">
+        <mat-icon class="brand-icon">payments</mat-icon>
+        <span class="brand-name">ACME HR</span>
+      </div>
+      <span class="brand-subtitle">Salary Management</span>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <mat-nav-list class="nav-list">
+      <a mat-list-item routerLink="/dashboard" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">
+        <mat-icon matListItemIcon>dashboard</mat-icon>
+        <span matListItemTitle>Dashboard</span>
+      </a>
+
+      <a mat-list-item routerLink="/employees" routerLinkActive="active-link">
+        <mat-icon matListItemIcon>badge</mat-icon>
+        <span matListItemTitle>Employees</span>
+      </a>
+
+      <a mat-list-item routerLink="/reports" routerLinkActive="active-link">
+        <mat-icon matListItemIcon>query_stats</mat-icon>
+        <span matListItemTitle>Reports & Export</span>
+      </a>
+
+      <a mat-list-item routerLink="/audit-logs" routerLinkActive="active-link" *ngIf="authService.isAdmin()">
+        <mat-icon matListItemIcon>history</mat-icon>
+        <span matListItemTitle>Audit Logs</span>
+      </a>
+    </mat-nav-list>
+
+    <div class="sidenav-footer">
+      <div class="system-info">
+        <span>v1.0.0-PROD</span>
+        <span>ACME Global HR</span>
+      </div>
+    </div>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="content-container">
+    <mat-toolbar color="primary" class="app-toolbar">
+      <button mat-icon-button (click)="drawer.toggle()" class="menu-button" aria-label="Toggle navigation">
+        <mat-icon>menu</mat-icon>
+      </button>
+
+      <span class="toolbar-title">ACME Compensation Portal</span>
+
+      <span class="spacer"></span>
+
+      <!-- User Profile & Roles -->
+      <div class="user-profile" *ngIf="authService.currentUser() as user">
+        <div class="user-details">
+          <span class="user-name">{{ user.fullName || user.username }}</span>
+          <div class="role-badges">
+            <span *ngFor="let role of user.roles" class="role-pill" [ngClass]="role">
+              {{ role.replace('ROLE_', '') }}
+            </span>
+          </div>
+        </div>
+
+        <button mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="User menu">
+          <mat-icon>account_circle</mat-icon>
+        </button>
+
+        <mat-menu #userMenu="matMenu">
+          <div class="menu-header">
+            <strong>{{ user.fullName }}</strong>
+            <small>{{ user.email }}</small>
+          </div>
+          <mat-divider></mat-divider>
+          <button mat-menu-item (click)="logout()">
+            <mat-icon color="warn">logout</mat-icon>
+            <span>Sign Out</span>
+          </button>
+        </mat-menu>
+      </div>
+    </mat-toolbar>
+
+    <main class="page-content">
+      <router-outlet></router-outlet>
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

@@ -1,0 +1,134 @@
+<div class="employee-detail-container">
+  <div class="back-nav">
+    <a routerLink="/employees" class="back-link">
+      <mat-icon>arrow_back</mat-icon> Back to Employee Directory
+    </a>
+  </div>
+
+  <div class="loading-state" *ngIf="isLoading()">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Loading employee record...</p>
+  </div>
+
+  <div *ngIf="!isLoading() && employee() as emp">
+    <!-- Header Card -->
+    <mat-card class="profile-header-card">
+      <div class="header-main">
+        <div class="avatar-circle">
+          <span>{{ emp.firstName.charAt(0) }}{{ emp.lastName.charAt(0) }}</span>
+        </div>
+
+        <div class="title-details">
+          <div class="name-status">
+            <h1 class="employee-name">{{ emp.firstName }} {{ emp.lastName }}</h1>
+            <span class="badge" [ngClass]="{
+              'badge-success': emp.status === 'ACTIVE',
+              'badge-danger': emp.status === 'TERMINATED',
+              'badge-warning': emp.status === 'ON_LEAVE',
+              'badge-info': emp.status === 'INACTIVE'
+            }">
+              {{ emp.status }}
+            </span>
+          </div>
+
+          <div class="meta-row">
+            <span class="meta-item">
+              <mat-icon>badge</mat-icon> {{ emp.employeeCode }}
+            </span>
+            <span class="meta-item">
+              <mat-icon>work</mat-icon> {{ emp.jobTitle.title }}
+            </span>
+            <span class="meta-item">
+              <mat-icon>domain</mat-icon> {{ emp.department.name }}
+            </span>
+            <span class="meta-item">
+              <mat-icon>place</mat-icon> {{ emp.country.name }} ({{ emp.country.isoCode }})
+            </span>
+          </div>
+        </div>
+
+        <div class="header-actions" *ngIf="authService.isManager()">
+          <button mat-stroked-button color="primary" (click)="editProfile()">
+            <mat-icon>edit</mat-icon> Edit Profile
+          </button>
+          <button mat-stroked-button (click)="changeStatus()">
+            <mat-icon>change_circle</mat-icon> Status
+          </button>
+        </div>
+      </div>
+    </mat-card>
+
+    <!-- Details Grid -->
+    <div class="details-grid">
+      <!-- Profile Information -->
+      <mat-card class="detail-card">
+        <h3 class="card-title">Employment Information</h3>
+        <div class="info-list">
+          <div class="info-item">
+            <span class="info-label">Corporate Email</span>
+            <span class="info-value">{{ emp.email }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Hire Date</span>
+            <span class="info-value">{{ emp.hireDate | date:'mediumDate' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Department</span>
+            <span class="info-value">{{ emp.department.name }} ({{ emp.department.departmentCode }})</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Operational Country</span>
+            <span class="info-value">{{ emp.country.name }} ({{ emp.country.isoCode }})</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Record Created</span>
+            <span class="info-value">{{ emp.createdAt | date:'medium' }}</span>
+          </div>
+        </div>
+      </mat-card>
+
+      <!-- Active Compensation Card -->
+      <mat-card class="detail-card compensation-card">
+        <div class="comp-card-header">
+          <h3 class="card-title">Current Compensation</h3>
+          <span class="comp-badge" *ngIf="emp.currentSalary">Active</span>
+        </div>
+
+        <div *ngIf="emp.currentSalary; else noCurrentSalary" class="current-salary-info">
+          <div class="salary-highlight">
+            <span class="salary-amount">
+              {{ emp.currentSalary.currencySymbol }}{{ emp.currentSalary.amount | number:'1.2-2' }}
+            </span>
+            <span class="salary-currency">{{ emp.currentSalary.currencyCode }} / {{ emp.currentSalary.payFrequency }}</span>
+          </div>
+
+          <div class="salary-meta-grid">
+            <div class="meta-field">
+              <span class="meta-label">Effective From</span>
+              <span class="meta-value">{{ emp.currentSalary.effectiveFrom | date:'mediumDate' }}</span>
+            </div>
+            <div class="meta-field">
+              <span class="meta-label">Effective To</span>
+              <span class="meta-value">{{ emp.currentSalary.effectiveTo ? (emp.currentSalary.effectiveTo | date:'mediumDate') : 'Present (Active)' }}</span>
+            </div>
+            <div class="meta-field full-span" *ngIf="emp.currentSalary.changeReason">
+              <span class="meta-label">Change Reason</span>
+              <span class="meta-value">{{ emp.currentSalary.changeReason }}</span>
+            </div>
+            <div class="meta-field full-span" *ngIf="emp.currentSalary.notes">
+              <span class="meta-label">Notes</span>
+              <span class="meta-value">{{ emp.currentSalary.notes }}</span>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #noCurrentSalary>
+          <div class="no-salary-state">
+            <mat-icon>monetization_on</mat-icon>
+            <p>No active salary record assigned to this employee.</p>
+          </div>
+        </ng-template>
+      </mat-card>
+    </div>
+  </div>
+</div>
