@@ -380,4 +380,51 @@ This document maintains an auditable, incremental log of engineering decisions, 
 - **Human / Architect Review**: Container setup meets production standards with non-root runtime, robust reverse proxy, and cascading health checks. Ready for Commit 15.
 - **Final Outcome**: Milestone 15 complete. Ready for Git commit 15 (`build: add Docker deployment and health checks`).
 
+---
+
+## Entry 16: Test Credentials, Test Cases, and Deployment Documentation
+- **Date**: 2026-10-15
+- **Module / Task**: Documentation — Test Credentials, Test Cases, Deployment Guides, and Query Performance Analysis (Commit 16)
+- **Goal**: Author comprehensive, enterprise-grade documentation covering operator test credentials, step-by-step evaluator testing workflows, test cases matrix, local and Docker container deployment instructions, production readiness standards, and PostgreSQL query execution plans.
+- **AI Tool Used**: Antigravity Assistant (Gemini 3.8 Flash High)
+- **Prompt Files**: `docs/ai/prompts/05-devops-prompt.md`, `docs/ai/prompts/06-testing-prompt.md`
+- **Main Changes Generated or Suggested**:
+  - `docs/testing/test-credentials.md`:
+    - Definitive credentials table for `admin`, `manager`, and `viewer` roles with associated authorities and permission boundaries.
+    - Dataset anatomy covering 10,000 employees and 16,078 salary records across 8 countries and currencies.
+    - Highlighted representative test personas (`EMP00001`, `EMP00002`, `EMP00005`, `EMP00010`, `EMP00042`, `EMP10000`).
+    - Five detailed evaluator test scenarios: rate limiting lockout (HTTP 429), RBAC route & endpoint authorization, salary revision & overlap collision prevention, formula-safe CSV export, and audit log inspection.
+  - `docs/testing/test-cases.md`:
+    - Structured matrix mapping 35+ test cases (`TC-AUTH-*`, `TC-RBAC-*`, `TC-EMP-*`, `TC-SAL-*`, `TC-REP-*`, `TC-AUD-*`) across all application modules to automated tests.
+  - `docs/deployment/local-setup.md`:
+    - Complete prerequisite checklist, PostgreSQL setup, Spring Boot Maven wrapper launch, Flyway migrations, automatic seeding, and Angular proxy dev server setup.
+  - `docs/deployment/docker-deployment.md`:
+    - Multi-tier architecture diagram, single-command deployment (`docker compose up --build -d`), cascading healthchecks (`pg_isready` -> `/actuator/health` -> Nginx spider), ports, log management, and volume management.
+  - `docs/deployment/production-readiness.md`:
+    - Production checklist across security, financial precision, effective dating integrity, high-availability PostgreSQL replication, WAL archiving, PITR, HikariCP pool sizing, JVM container tuning, and OWASP Top 10 mitigation.
+  - `docs/performance/benchmarks.md`:
+    - Empirical latency percentiles (p50, p95, p99) on 10,000 employees: 0.05ms point lookups, 0.92ms paginated joins, 9.69ms currency aggregations, and 7,596 entities/sec seeding throughput.
+  - `docs/performance/query-analysis.md`:
+    - Full PostgreSQL `EXPLAIN (ANALYZE, BUFFERS)` output logs analyzing index usage (`idx_employees_code`, `idx_employees_names`, `uq_employee_active_salary`, `idx_salary_employee_history`) and 100% buffer cache hits.
+  - `docs/ai/prompts/05-devops-prompt.md` & `docs/ai/prompts/06-testing-prompt.md`: Captured DevOps and QA prompt requirements.
+- **Files Changed**:
+  - `docs/testing/test-credentials.md`
+  - `docs/testing/test-cases.md`
+  - `docs/deployment/local-setup.md`
+  - `docs/deployment/docker-deployment.md`
+  - `docs/deployment/production-readiness.md`
+  - `docs/performance/benchmarks.md`
+  - `docs/performance/query-analysis.md`
+  - `docs/ai/prompts/05-devops-prompt.md`
+  - `docs/ai/prompts/06-testing-prompt.md`
+  - `docs/ai/AI_WORKLOG.md`
+- **Tests Executed**:
+  - Verified query plans via live PostgreSQL `EXPLAIN (ANALYZE, BUFFERS)`.
+  - Verified links and markdown formatting.
+- **Problems Discovered**: None.
+- **Corrections Made**: N/A.
+- **Human / Architect Review**: All documentation requirements from Section 14 and Commit 16 verified. Ready for Commit 16.
+- **Final Outcome**: Milestone 16 complete. Ready for Git commit 16 (`docs: add test credentials and deployment guide`).
+
+
 
