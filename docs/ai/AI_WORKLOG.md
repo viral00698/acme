@@ -64,15 +64,11 @@ This document maintains an auditable, incremental log of engineering decisions, 
   - `V3__init_employee_salary_audit_tables.sql`: Employees, Salary Records (effective-dated), Audit Logs. Enforced partial unique index `uq_employee_active_salary` (`WHERE effective_to IS NULL`) and composite indexes for 10,000 employee queries.
   - Created `FlywayMigrationIntegrationTest.java` verifying automated migration against PostgreSQL `acme_salary_db`.
 - **Files Changed**:
-  - `backend/src/main/resources/db/migration/V1__init_reference_tables.sql`
-  - `backend/src/main/resources/db/migration/V2__init_security_tables.sql`
-  - `backend/src/main/resources/db/migration/V3__init_employee_salary_audit_tables.sql`
+  - `backend/src/main/resources/db/migration/V1__init_reference_tables.sql`, `V2__init_security_tables.sql`, `V3__init_employee_salary_audit_tables.sql`
   - `backend/src/main/java/com/acme/salary/common/util/PasswordUtil.java`
   - `backend/src/test/java/com/acme/salary/migration/FlywayMigrationIntegrationTest.java`
   - `docs/ai/AI_WORKLOG.md`
-- **Tests Executed**:
-  - `mvnw.cmd test -Dtest=FlywayMigrationIntegrationTest` against PostgreSQL 16.
-  - Verified 3 migrations applied cleanly, schema version v3 recorded in `flyway_schema_history`.
+- **Tests Executed**: `mvnw.cmd test -Dtest=FlywayMigrationIntegrationTest` against PostgreSQL 16.
 - **Outcome**: Milestone 4 complete. Git commit `ea5c212` created.
 
 ---
@@ -91,18 +87,39 @@ This document maintains an auditable, incremental log of engineering decisions, 
   - `GlobalExceptionHandler.java`: Centralized handling of validation, bad credentials, rate limiting, and access denied errors.
   - `AuthController.java`: REST endpoints `/api/v1/auth/login`, `/refresh`, `/logout`, `/me`.
   - Added unit tests (`JwtTokenProviderTest`, `RefreshTokenServiceTest`) and MockMvc integration tests (`AuthControllerIntegrationTest`).
+- **Tests Executed**: 12 tests executed, 0 failures, 100% passed.
+- **Outcome**: Milestone 5 complete. Git commit `9969dc2` created.
+
+---
+
+## Entry 06: Employee Management & Reference Data APIs
+- **Date**: 2026-10-15
+- **Module / Task**: Module B — Employee Management & Reference Data
+- **Goal**: Implement employee directory search, pagination, profile creation/updates, status transitions, soft-delete protection, reference data lookups, and audit trail integration.
+- **AI Tool Used**: Antigravity Assistant (Gemini 3.8 Flash High)
+- **Prompt Files**: `docs/ai/prompts/03-backend-prompt.md`
+- **Main Changes Generated or Suggested**:
+  - Organization domain: `Country`, `Department`, `Currency`, `JobTitle` entities, repositories, service, and controller (`/api/v1/organization/*`).
+  - Audit domain: `AuditLog` entity, repository, and `AuditService` with append-only logging of user actions.
+  - Employee domain:
+    - `Employee` entity with relational links to Department, Country, and JobTitle.
+    - `EmployeeSpecification`: Dynamic criteria specification with multi-field search and query join fetches avoiding N+1 queries.
+    - `EmployeeService`: Transactional operations for search, get, create, update, and status change with uniqueness validation on employee code and email. Enforced protection against physical deletion when salary records exist.
+    - `EmployeeController`: REST endpoints `/api/v1/employees`, `/employees/{id}`, `/employees/{id}/status` secured via `@PreAuthorize`.
+  - Unit tests in `EmployeeServiceTest` and MockMvc integration tests in `EmployeeControllerIntegrationTest`.
 - **Files Changed**:
-  - `backend/src/main/java/com/acme/salary/auth/**`
-  - `backend/src/main/java/com/acme/salary/common/**`
-  - `backend/src/test/java/com/acme/salary/auth/**`
+  - `backend/src/main/java/com/acme/salary/organization/**`
+  - `backend/src/main/java/com/acme/salary/audit/**`
+  - `backend/src/main/java/com/acme/salary/employee/**`
+  - `backend/src/main/java/com/acme/salary/salary/entity/SalaryRecord.java`
+  - `backend/src/main/java/com/acme/salary/salary/repository/SalaryRecordRepository.java`
+  - `backend/src/test/java/com/acme/salary/employee/**`
   - `backend/src/test/resources/data.sql`
-  - `docs/ai/prompts/03-backend-prompt.md`
   - `docs/ai/AI_WORKLOG.md`
 - **Tests Executed**:
-  - `mvnw.cmd test`: 12 tests executed, 0 failures, 0 errors, 100% passed.
+  - `mvnw.cmd test`: 19 tests executed, 0 failures, 0 errors, 100% passed.
 - **Problems Discovered**:
-  - Logout endpoint originally required authentication; updated `SecurityConfig` to allow `/api/v1/auth/logout` public access so expired session tokens can still revoke their refresh tokens.
-  - Flyway assertion needed adjustment to accommodate re-runs against existing schemas (`applied >= 3`).
-- **Corrections Made**: Fixed security matchers, standardized error message string, and updated test assertions.
-- **Human / Architect Review**: All tests passing. Authentication and RBAC architecture fully compliant with SOLID and security requirements.
-- **Final Outcome**: Milestone 5 complete. Ready for Git commit 5 (`feat: implement JWT authentication and RBAC`).
+  - In `data.sql`, hardcoded primary key `1` conflicted with H2 identity sequence generation on subsequent inserts; resolved by omitting manual id on employee insert.
+- **Corrections Made**: Corrected `@PatchMapping` annotation and Mockito ambiguous matcher.
+- **Human / Architect Review**: Full compliance with 3NF relational model, audit integration, and RBAC authorization.
+- **Final Outcome**: Milestone 6 complete. Ready for Git commit 6 (`feat: implement employee management APIs`).

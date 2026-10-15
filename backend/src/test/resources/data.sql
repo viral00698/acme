@@ -13,3 +13,23 @@ INSERT INTO user_roles (user_id, role_id) VALUES
 (1, 1),
 (2, 2),
 (3, 3);
+
+INSERT INTO currencies (code, name, symbol) VALUES
+('USD', 'US Dollar', '$'),
+('EUR', 'Euro', '€'),
+('GBP', 'British Pound', '£');
+
+INSERT INTO countries (id, code, name, default_currency_code) VALUES
+(1, 'USA', 'United States', 'USD'),
+(2, 'GBR', 'United Kingdom', 'GBP');
+
+INSERT INTO departments (id, code, name) VALUES
+(1, 'ENG', 'Engineering'),
+(2, 'HR', 'Human Resources');
+
+INSERT INTO job_titles (id, title, department_id) VALUES
+(1, 'Software Engineer', 1),
+(2, 'HR Specialist', 2);
+
+INSERT INTO employees (employee_code, first_name, last_name, email, phone_number, department_id, country_id, job_title_id, status, hire_date, created_at, updated_at) VALUES
+('EMP-00001', 'John', 'Doe', 'john.doe@acme.corp', '+1-555-0100', 1, 1, 1, 'ACTIVE', '2023-01-10', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
