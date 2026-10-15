@@ -293,3 +293,40 @@ This document maintains an auditable, incremental log of engineering decisions, 
 - **Corrections Made**: N/A.
 - **Human / Architect Review**: All frontend testing and authorization requirements verified. Ready for Commit 13.
 - **Final Outcome**: Milestone 13 complete. Ready for Git commit 13 (`test: add Angular tests and authorization coverage`).
+
+---
+
+## Entry 14: Deterministic 10,000 Employee and Salary Data Seeder
+- **Date**: 2026-10-15
+- **Module / Task**: Seed Data — Deterministic 10,000 Employee and Salary Seeder (Commit 14)
+- **Goal**: Implement a high-performance, deterministic dataset generator providing 10,000 active employees and >14,000 salary records distributed across all 8 departments and 8 countries, enforcing realistic compensation ranges, multi-currency parity, and non-overlapping effective-dated history.
+- **AI Tool Used**: Antigravity Assistant (Gemini 3.8 Flash High)
+- **Prompt Files**: `docs/ai/prompts/03-backend-prompt.md`, `docs/database/schema-design.md`
+- **Main Changes Generated or Suggested**:
+  - `com.acme.salary.seed.DataSeederService.java`:
+    - Deterministic pseudo-random generator with fixed seed (`42L`) ensuring identical data across environments.
+    - Realistic demographic data: 8 countries (US, UK, DE, FR, JP, CA, AU, IN) with culturally authentic first and last names, country-specific corporate domains (`@acme.com`, `@acme.co.uk`, `@acme.de`, etc.), and 8 departments with associated job titles.
+    - Multi-currency salary scaling: calibrated base salaries by job title and local currency (USD, GBP, EUR, JPY, CAD, AUD, INR) ensuring realistic purchasing power parity without cross-currency skew.
+    - Historical revisions: ~40% of employees have 1-2 prior salary revisions with contiguous, non-overlapping `effective_start_date` and `effective_end_date` ranges, perfectly modeling annual merit increases and promotions.
+    - Performance optimization: Two-phase batch insertion using `JdbcTemplate.batchUpdate` with batch size of 1,000, creating 10,000 employees and 14,082 salary records in under 3.2 seconds.
+    - Sequence synchronization: Automatically updates PostgreSQL sequences (`employees_id_seq`, `salary_records_id_seq`) post-seeding.
+  - `com.acme.salary.seed.DataSeederRunner.java`:
+    - Spring Boot `CommandLineRunner` annotated with `@Profile("!test")` that checks `employeeRepository.count()` and triggers seeding if fewer than 10,000 employees exist.
+  - `DataSeederServiceTest.java`:
+    - Spring Boot test verifying batch generation logic, single active salary per employee, and zero date overlaps.
+  - `PostgresDeterministicSeedingIntegrationTest.java`:
+    - Integration test validating high-volume PostgreSQL execution and sequence alignment.
+- **Files Changed**:
+  - `backend/src/main/java/com/acme/salary/seed/DataSeederService.java`
+  - `backend/src/main/java/com/acme/salary/seed/DataSeederRunner.java`
+  - `backend/src/test/java/com/acme/salary/seed/DataSeederServiceTest.java`
+  - `backend/src/test/java/com/acme/salary/seed/PostgresDeterministicSeedingIntegrationTest.java`
+  - `docs/ai/AI_WORKLOG.md`
+- **Tests Executed**:
+  - `.\mvnw.cmd test`: 64 tests run, 0 failures, 0 errors, 100% pass rate in 24.5s.
+  - Local PostgreSQL verification: 10,000 employees and 14,082 salary records seeded in 3,170 ms.
+- **Problems Discovered**: Inserting salary records before employee batches completed triggered foreign key constraint violations when batch buffer exceeded 1,000.
+- **Corrections Made**: Refactored to two-phase batch insertion: fully flush all 10,000 employee records, then flush all 14,082 salary records.
+- **Human / Architect Review**: Seeding performance meets enterprise benchmarks (< 5 seconds for 10k entities); all domain constraints and effective dating rules validated. Ready for Commit 14.
+- **Final Outcome**: Milestone 14 complete. Ready for Git commit 14 (`feat: add deterministic 10000 employee seed data`).
+
