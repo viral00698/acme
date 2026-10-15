@@ -1,0 +1,12 @@
+graph TD
+    User["HR Manager / Admin / Viewer"]
+    
+    subgraph ACME_System ["ACME Enterprise Network"]
+        SPA["Single Page Application (Angular 19/20)"]
+        API["Backend API Service (Spring Boot 3.3.4)"]
+        DB[("PostgreSQL 16 Database")]
+    end
+    
+    User -->|"HTTPS / Browser"| SPA
+    SPA -->|"REST APIs / Bearer JWT"| API
+    API -->|"JDBC / HikariCP Pool"| DB

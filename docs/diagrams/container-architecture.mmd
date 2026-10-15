@@ -1,0 +1,32 @@
+graph TD
+    Client["Client Web Browser"]
+    
+    subgraph Docker_Compose ["Docker Compose Orchestration"]
+        subgraph Frontend_Container ["acme-frontend : 4200/80"]
+            Nginx["Nginx Web Server"]
+            AngularAssets["Compiled Angular SPA Assets"]
+            Nginx --- AngularAssets
+        end
+        
+        subgraph Backend_Container ["acme-backend : 8080"]
+            Tomcat["Embedded Tomcat"]
+            SpringSecurity["Spring Security Filter (JWT/RBAC)"]
+            Controllers["Spring Web REST Controllers"]
+            Services["Domain Services (@Transactional)"]
+            JPA["Spring Data JPA / Hibernate"]
+            Flyway["Flyway Migration Engine"]
+            
+            Tomcat --> SpringSecurity --> Controllers --> Services --> JPA
+            Flyway -.->|"Startup Migrations"| JPA
+        end
+        
+        subgraph Database_Container ["acme-postgres : 5432"]
+            PostgreSQL[("PostgreSQL 16 Engine")]
+            Volume[("Persistent Data Volume: postgres_data")]
+            PostgreSQL --- Volume
+        end
+    end
+    
+    Client -->|"HTTP / Static Files"| Nginx
+    Client -->|"HTTP REST /api/v1/*"| Tomcat
+    JPA -->|"TCP 5432 / HikariCP"| PostgreSQL

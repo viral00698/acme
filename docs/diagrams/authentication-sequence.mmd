@@ -1,0 +1,31 @@
+sequenceDiagram
+    autonumber
+    actor User as HR User
+    participant UI as Angular SPA
+    participant Controller as AuthController
+    participant Service as AuthService
+    participant TokenService as RefreshTokenService
+    participant DB as PostgreSQL 16
+
+    User->>UI: Enter username & password
+    UI->>Controller: POST /api/v1/auth/login
+    Controller->>Service: authenticate(username, password)
+    Service->>DB: findByUsername(username)
+    DB-->>Service: UserAccount & PasswordHash
+    
+    alt Invalid Credentials
+        Service-->>Controller: BadCredentialsException
+        Controller-->>UI: HTTP 401 Unauthorized
+        UI-->>User: Show "Invalid username or password"
+    else Valid Credentials
+        Service->>Service: Generate JWT Access Token (15m)
+        Service->>TokenService: createRefreshToken(userId)
+        TokenService->>TokenService: Generate 64-byte token & hash SHA-256
+        TokenService->>DB: INSERT INTO refresh_tokens
+        DB-->>TokenService: Stored
+        TokenService-->>Service: RefreshToken entity
+        Service-->>Controller: AuthResponse(tokens, userProfile)
+        Controller-->>UI: HTTP 200 OK + Tokens
+        UI->>UI: Save tokens & initialize user session
+        UI-->>User: Navigate to Dashboard
+    end

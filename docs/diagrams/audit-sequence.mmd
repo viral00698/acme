@@ -1,0 +1,24 @@
+sequenceDiagram
+    autonumber
+    actor Admin as HR Admin
+    participant UI as Angular SPA (AuditLogComponent)
+    participant Controller as AuditController
+    participant Service as AuditService
+    participant Repo as AuditLogRepository
+    participant DB as PostgreSQL 16
+
+    Admin->>UI: Navigate to "Audit Trail" page
+    UI->>Controller: GET /api/v1/audit-logs?page=0&size=20
+    
+    alt User is HR_VIEWER or HR_MANAGER
+        Controller-->>UI: HTTP 403 Forbidden (Only HR_ADMIN authorized)
+        UI-->>Admin: Display "Access Denied" error
+    else User is HR_ADMIN
+        Controller->>Service: getAuditLogs(filterCriteria, pageable)
+        Service->>Repo: findAll(spec, pageable)
+        Repo->>DB: SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT 20 OFFSET 0
+        DB-->>Repo: Audit records
+        Service-->>Controller: PageResponse<AuditLogDto>
+        Controller-->>UI: HTTP 200 OK
+        UI->>UI: Render Audit Log Table with JSON diff viewer
+    end

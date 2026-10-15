@@ -1,0 +1,28 @@
+sequenceDiagram
+    autonumber
+    actor HR as HR Manager
+    participant UI as Angular SPA (ReportsComponent)
+    participant Controller as ReportController
+    participant Service as ReportService
+    participant Sanitizer as CsvSanitizer
+    participant DB as PostgreSQL 16
+
+    HR->>UI: Select Filters (Country=USA, Dept=ENG) & Click "Export CSV"
+    UI->>Controller: GET /api/v1/reports/salaries/export?countryId=1&deptId=2
+    Controller->>Service: streamSalaryReportCsv(filterCriteria, responseOutputStream)
+    
+    Service->>DB: Stream matching Employee & Active Salary rows (Cursor/FetchSize)
+    DB-->>Service: Row batch stream
+    
+    loop For each row
+        Service->>Sanitizer: sanitizeField(value)
+        alt Starts with '=', '+', '-', '@', tab, CR
+            Sanitizer-->>Service: Prepend single quote ("'")
+        else Safe text
+            Sanitizer-->>Service: Raw escaped text
+        end
+        Service->>Controller: Write CSV row to OutputStream
+    end
+    
+    Controller-->>UI: HTTP 200 OK (Content-Type: text/csv, Transfer-Encoding: chunked)
+    UI-->>HR: Browser triggers file download ("acme_salaries_report.csv")

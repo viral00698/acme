@@ -1,0 +1,35 @@
+sequenceDiagram
+    autonumber
+    actor HR as HR Manager
+    participant UI as Angular SPA
+    participant Controller as EmployeeController
+    participant Service as EmployeeService
+    participant Repo as EmployeeRepository
+    participant Audit as AuditService
+    participant DB as PostgreSQL 16
+
+    HR->>UI: Submit Create Employee Form
+    UI->>Controller: POST /api/v1/employees (CreateEmployeeRequest)
+    Controller->>Service: createEmployee(request)
+    
+    Service->>Repo: existsByEmployeeCode(code)
+    alt Code Already Exists
+        Service-->>Controller: DuplicateResourceException("Code already in use")
+        Controller-->>UI: HTTP 409 Conflict
+        UI-->>HR: Show validation error
+    else Code Is Unique
+        Service->>Repo: existsByEmail(email)
+        alt Email Already Exists
+            Service-->>Controller: DuplicateResourceException("Email already in use")
+            Controller-->>UI: HTTP 409 Conflict
+        else Email Is Unique
+            Service->>Repo: save(employee)
+            Repo->>DB: INSERT INTO employees VALUES (...)
+            DB-->>Repo: Saved Employee (id=10001)
+            Service->>Audit: log(actor, "EMPLOYEE", 10001, "CREATE", details)
+            Audit->>DB: INSERT INTO audit_logs VALUES (...)
+            Service-->>Controller: EmployeeDetailDto
+            Controller-->>UI: HTTP 201 Created
+            UI-->>HR: Show success notification & open detail view
+        end
+    end

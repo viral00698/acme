@@ -1,0 +1,24 @@
+sequenceDiagram
+    autonumber
+    actor HR as HR User
+    participant UI as Angular SPA (DashboardComponent)
+    participant Controller as AnalyticsController
+    participant Service as AnalyticsService
+    participant Repo as AnalyticsRepository
+    participant DB as PostgreSQL 16
+
+    HR->>UI: Navigate to Dashboard
+    UI->>Controller: GET /api/v1/analytics/overview
+    Controller->>Service: getOverviewMetrics()
+    
+    Service->>Repo: countActiveEmployees()
+    Repo->>DB: SELECT COUNT(*) FROM employees WHERE status = 'ACTIVE'
+    DB-->>Repo: 9,850
+    
+    Service->>Repo: getCompensationSummariesByCurrency()
+    Repo->>DB: SELECT currency_code, COUNT(*), MIN(amount), MAX(amount), AVG(amount) FROM salary_records WHERE effective_to IS NULL GROUP BY currency_code
+    DB-->>Repo: Aggregated Currency Rows
+    
+    Service-->>Controller: DashboardOverviewDto
+    Controller-->>UI: HTTP 200 OK (JSON)
+    UI->>UI: Render KPI Summary Cards & Visual Charts

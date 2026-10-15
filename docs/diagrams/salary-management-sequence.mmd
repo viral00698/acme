@@ -1,0 +1,40 @@
+sequenceDiagram
+    autonumber
+    actor HR as HR Manager
+    participant UI as Angular SPA
+    participant Controller as SalaryController
+    participant Service as SalaryService
+    participant Repo as SalaryRecordRepository
+    participant Audit as AuditService
+    participant DB as PostgreSQL 16
+
+    HR->>UI: Submit New Salary Revision (Amount, Currency, Date)
+    UI->>Controller: POST /api/v1/employees/42/salaries
+    Controller->>Service: createSalaryRevision(42, request)
+
+    rect rgb(240, 248, 255)
+        Service->>Repo: findActiveByEmployeeId(42)
+        Repo->>DB: SELECT * FROM salary_records WHERE employee_id=42 AND effective_to IS NULL
+        DB-->>Repo: Current Active Salary Record (effective_from = 2025-01-01)
+        Repo-->>Service: ActiveRecord
+
+        alt New Effective Date <= Current Effective Date (e.g. 2024-12-01)
+            Service-->>Controller: SalaryOverlapException("Overlapping date range")
+            Controller-->>UI: HTTP 409 Conflict
+            UI-->>HR: Display Error Alert: Date must be after current period
+        else New Effective Date Is Valid (e.g. 2026-11-01)
+            Note over Service,DB: Close Prior Record & Insert New
+            Service->>Repo: save(activeRecord.setEffectiveTo(2026-10-31))
+            Repo->>DB: UPDATE salary_records SET effective_to='2026-10-31', version=version+1
+            
+            Service->>Repo: save(newSalaryRecord(effective_from=2026-11-01, effective_to=NULL))
+            Repo->>DB: INSERT INTO salary_records VALUES (...)
+            
+            Service->>Audit: log(actor, "SALARY_RECORD", 42, "REVISION", details)
+            Audit->>DB: INSERT INTO audit_logs VALUES (...)
+            DB-->>Service: Commit Transaction
+            Service-->>Controller: SalaryRecordDto
+            Controller-->>UI: HTTP 201 Created
+            UI-->>HR: Refresh Timeline & Show Success Snackbar
+        end
+    end
