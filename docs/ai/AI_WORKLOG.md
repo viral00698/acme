@@ -63,11 +63,6 @@ This document maintains an auditable, incremental log of engineering decisions, 
   - `V2__init_security_tables.sql`: Roles, User Accounts, User Roles, Refresh Tokens with BCrypt hashed seeds for `admin`, `manager`, `viewer`.
   - `V3__init_employee_salary_audit_tables.sql`: Employees, Salary Records (effective-dated), Audit Logs. Enforced partial unique index `uq_employee_active_salary` (`WHERE effective_to IS NULL`) and composite indexes for 10,000 employee queries.
   - Created `FlywayMigrationIntegrationTest.java` verifying automated migration against PostgreSQL `acme_salary_db`.
-- **Files Changed**:
-  - `backend/src/main/resources/db/migration/V1__init_reference_tables.sql`, `V2__init_security_tables.sql`, `V3__init_employee_salary_audit_tables.sql`
-  - `backend/src/main/java/com/acme/salary/common/util/PasswordUtil.java`
-  - `backend/src/test/java/com/acme/salary/migration/FlywayMigrationIntegrationTest.java`
-  - `docs/ai/AI_WORKLOG.md`
 - **Tests Executed**: `mvnw.cmd test -Dtest=FlywayMigrationIntegrationTest` against PostgreSQL 16.
 - **Outcome**: Milestone 4 complete. Git commit `ea5c212` created.
 
@@ -101,11 +96,7 @@ This document maintains an auditable, incremental log of engineering decisions, 
 - **Main Changes Generated or Suggested**:
   - Organization domain: `Country`, `Department`, `Currency`, `JobTitle` entities, repositories, service, and controller (`/api/v1/organization/*`).
   - Audit domain: `AuditLog` entity, repository, and `AuditService` with append-only logging of user actions.
-  - Employee domain:
-    - `Employee` entity with relational links to Department, Country, and JobTitle.
-    - `EmployeeSpecification`: Dynamic criteria specification with multi-field search and query join fetches avoiding N+1 queries.
-    - `EmployeeService`: Transactional operations for search, get, create, update, and status change with uniqueness validation on employee code and email. Enforced protection against physical deletion when salary records exist.
-    - `EmployeeController`: REST endpoints `/api/v1/employees`, `/employees/{id}`, `/employees/{id}/status` secured via `@PreAuthorize`.
+  - Employee domain: `Employee` entity, `EmployeeSpecification`, `EmployeeService`, `EmployeeController` (`/api/v1/employees`).
   - Unit tests in `EmployeeServiceTest` and MockMvc integration tests in `EmployeeControllerIntegrationTest`.
 - **Tests Executed**: 19 tests executed, 0 failures, 0 errors, 100% passed.
 - **Outcome**: Milestone 6 complete. Git commit `805a598` created.
@@ -120,20 +111,31 @@ This document maintains an auditable, incremental log of engineering decisions, 
 - **Prompt Files**: `docs/ai/prompts/03-backend-prompt.md`
 - **Main Changes Generated or Suggested**:
   - `SalaryRecord` entity with `BigDecimal` amounts, `@Version` optimistic locking, currency linkage, and date range validity checks.
-  - `SalaryRecordRepository`: Custom queries for active record lookups (`effectiveTo IS NULL`) and overlap detection (`findOverlappingRecords`).
-  - `SalaryService`: Transactional orchestration enforcing business invariants:
-    - Initial compensation creates active record.
-    - Subsequent revision checks new date > current date, closes active record (`effectiveTo = newFrom - 1 day`), inserts new active record, and records audit entry.
-    - Overlapping/inverted dates rejected with `SalaryOverlapException` (HTTP 409).
+  - `SalaryRecordRepository`: Custom queries for active record lookups and overlap detection.
+  - `SalaryService`: Transactional orchestration enforcing business invariants, superseding active records, and preventing invalid date ranges.
   - `SalaryController`: REST endpoints `GET /api/v1/employees/{id}/salaries`, `POST /api/v1/employees/{id}/salaries`, `GET /api/v1/employees/{id}/salaries/{salaryId}`.
   - Unit tests in `SalaryServiceTest` and MockMvc integration tests in `SalaryControllerIntegrationTest`.
+- **Tests Executed**: 26 tests executed, 0 failures, 0 errors, 100% passed.
+- **Outcome**: Milestone 7 complete. Git commit `58b5c27` created.
+
+---
+
+## Entry 08: Salary & Employee Audit Logging
+- **Date**: 2026-10-15
+- **Module / Task**: Module F — Audit Logging & Administration
+- **Goal**: Implement append-only audit trail controller, filtering endpoints, and verify role-based restrictions (accessible only to `HR_ADMIN`).
+- **AI Tool Used**: Antigravity Assistant (Gemini 3.8 Flash High)
+- **Prompt Files**: `docs/ai/prompts/03-backend-prompt.md`
+- **Main Changes Generated or Suggested**:
+  - `AuditController.java`: Endpoint `GET /api/v1/audit-logs` secured with `@PreAuthorize("hasAuthority('ROLE_HR_ADMIN')")`, supporting filtering by entityName, entityId, and actor.
+  - `AuditControllerIntegrationTest.java`: Verified HR_ADMIN access, 403 Forbidden for HR_MANAGER and HR_VIEWER, and proper pagination/filtering.
 - **Files Changed**:
-  - `backend/src/main/java/com/acme/salary/salary/**`
-  - `backend/src/test/java/com/acme/salary/salary/**`
+  - `backend/src/main/java/com/acme/salary/audit/controller/AuditController.java`
+  - `backend/src/test/java/com/acme/salary/audit/controller/AuditControllerIntegrationTest.java`
   - `docs/ai/AI_WORKLOG.md`
 - **Tests Executed**:
-  - `mvnw.cmd test`: 26 tests executed, 0 failures, 0 errors, 100% passed.
-- **Problems Discovered**: None. All salary transition rules and overlap detection passed.
+  - `mvnw.cmd test`: 29 tests executed, 0 failures, 0 errors, 100% passed.
+- **Problems Discovered**: None.
 - **Corrections Made**: N/A.
-- **Human / Architect Review**: ACID transaction boundaries, optimistic locking, and single-active-salary invariant verified. Ready for Commit 7.
-- **Final Outcome**: Milestone 7 complete. Ready for Git commit 7 (`feat: implement effective-dated salary management`).
+- **Human / Architect Review**: Append-only audit integrity verified. HR_ADMIN isolation confirmed. Ready for Commit 8.
+- **Final Outcome**: Milestone 8 complete. Ready for Git commit 8 (`feat: add salary audit logging`).
