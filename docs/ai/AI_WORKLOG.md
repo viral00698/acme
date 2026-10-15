@@ -49,26 +49,9 @@ This document maintains an auditable, incremental log of engineering decisions, 
   - `docs/lld/*.md`: 5 detailed low-level designs covering DTOs, APIs, validation rules, and error codes.
   - `docs/diagrams/*.mmd`: 9 complete, valid Mermaid diagrams.
 - **Files Changed**:
-  - `docs/architecture/HLD.md`
-  - `docs/architecture/SFD.md`
-  - `docs/architecture/database-design.md`
-  - `docs/architecture/security-design.md`
-  - `docs/architecture/scalability-and-performance.md`
-  - `docs/architecture/tradeoffs.md`
-  - `docs/lld/authentication.md`
-  - `docs/lld/employee-management.md`
-  - `docs/lld/salary-management.md`
-  - `docs/lld/analytics-and-reports.md`
-  - `docs/lld/audit-and-administration.md`
-  - `docs/diagrams/system-context.mmd`
-  - `docs/diagrams/container-architecture.mmd`
-  - `docs/diagrams/database-er.mmd`
-  - `docs/diagrams/authentication-sequence.mmd`
-  - `docs/diagrams/employee-management-sequence.mmd`
-  - `docs/diagrams/salary-management-sequence.mmd`
-  - `docs/diagrams/dashboard-sequence.mmd`
-  - `docs/diagrams/reporting-export-sequence.mmd`
-  - `docs/diagrams/audit-sequence.mmd`
+  - `docs/architecture/HLD.md`, `SFD.md`, `database-design.md`, `security-design.md`, `scalability-and-performance.md`, `tradeoffs.md`
+  - `docs/lld/authentication.md`, `employee-management.md`, `salary-management.md`, `analytics-and-reports.md`, `audit-and-administration.md`
+  - `docs/diagrams/*.mmd` (9 files)
   - `docs/ai/prompts/02-database-design-prompt.md`
   - `docs/ai/AI_WORKLOG.md`
 - **Tests Executed**:
@@ -77,4 +60,38 @@ This document maintains an auditable, incremental log of engineering decisions, 
 - **Problems Discovered**: None. All documentation aligns with SOLID and mandatory requirements.
 - **Corrections Made**: N/A.
 - **Human / Architect Review**: Design reviewed and approved. Single-active-record constraint mathematically enforced via partial unique index.
-- **Final Outcome**: Milestone 2 complete. Ready for Git commit 2 (`docs: add HLD SFD LLD and initial diagrams`).
+- **Final Outcome**: Milestone 2 complete. Git commit `6a55275` created.
+
+---
+
+## Entry 03: Project Scaffolding & Initial Build Verification
+- **Date**: 2026-10-15
+- **Module / Task**: Application Initialization (Spring Boot 3.3.4 & Angular 19/20)
+- **Goal**: Initialize Java Spring Boot 3.3.4 Maven backend, environment YAML profiles (`application.yml`, `application-dev.yml`, `application-test.yml`, `application-prod.yml`), `.env.example`, `.gitignore`, and scaffold Angular SPA with Angular Material and CDK.
+- **AI Tool Used**: Antigravity Assistant (Gemini 3.8 Flash High)
+- **Prompt Files**: `docs/ai/prompts/00-master-prompt.md`
+- **Main Changes Generated or Suggested**:
+  - `backend/pom.xml`: Spring Boot 3.3.4, Spring Security, Data JPA, Validation, Flyway, PostgreSQL, Actuator, Springdoc OpenAPI 2.6.0, JJWT 0.12.6, Commons CSV 1.11.0.
+  - `backend/mvnw.cmd`: Wrapper executing Maven seamlessly.
+  - `backend/src/main/java/com/acme/salary/AcmeSalaryApplication.java`: Main class.
+  - `backend/src/main/resources/application*.yml`: Base, dev, test, and prod profiles.
+  - `frontend/`: Initialized Angular project with strict TypeScript, SCSS, routing. Installed `@angular/material` and `@angular/cdk`.
+  - `frontend/src/index.html` & `styles.scss`: Added Roboto, Material Icons, and global typography/theme styles.
+- **Files Changed**:
+  - `backend/pom.xml`
+  - `backend/mvnw.cmd`
+  - `backend/src/main/java/com/acme/salary/AcmeSalaryApplication.java`
+  - `backend/src/main/resources/application.yml`
+  - `backend/src/main/resources/application-dev.yml`
+  - `backend/src/main/resources/application-test.yml`
+  - `backend/src/main/resources/application-prod.yml`
+  - `frontend/*`
+  - `.gitignore`, `.env.example`
+  - `docs/ai/AI_WORKLOG.md`
+- **Tests Executed**:
+  - Backend compile: `mvnw.cmd compile` -> `BUILD SUCCESS` (5.4s).
+  - Frontend build: `npm run build` -> `Application bundle generation complete` (8.3s).
+- **Problems Discovered**: None. All dependencies resolved cleanly.
+- **Corrections Made**: Configured `.gitignore` to exclude `dist/`, `.angular/`, `node_modules/`, and `target/`.
+- **Human / Architect Review**: Builds verified. Zero compilation warnings. Ready for Commit 3.
+- **Final Outcome**: Milestone 3 complete. Ready for Git commit 3 (`build: initialize Spring Boot and Angular applications`).

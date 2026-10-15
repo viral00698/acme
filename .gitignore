@@ -1,0 +1,29 @@
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Maven
+backend/target/
+*.class
+.mvn/
+*.log
+
+# Node & Angular
+frontend/node_modules/
+frontend/.angular/
+frontend/dist/
+*.tsbuildinfo
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment & Secrets
+.env
+*.local
