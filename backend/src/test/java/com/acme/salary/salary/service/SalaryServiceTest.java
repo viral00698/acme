@@ -26,6 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -153,5 +154,64 @@ class SalaryServiceTest {
         );
 
         verify(salaryRecordRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Reject salary revision on exact same effective date as current active record")
+    void testRejectSameDayEffectiveDate() {
+        SalaryRecord current = new SalaryRecord(employee, new BigDecimal("80000.00"), usd, "ANNUAL", LocalDate.of(2025, 1, 1), null, manager);
+        current.setId(5L);
+
+        CreateSalaryRequest sameDayRequest = new CreateSalaryRequest(
+                new BigDecimal("90000.00"), "USD", "ANNUAL", LocalDate.of(2025, 1, 1)
+        );
+
+        when(employeeRepository.findById(1L)).thenReturn(Optional.of(employee));
+        when(currencyRepository.findById("USD")).thenReturn(Optional.of(usd));
+        when(userAccountRepository.findByUsername("manager")).thenReturn(Optional.of(manager));
+        when(salaryRecordRepository.findActiveByEmployeeId(1L)).thenReturn(Optional.of(current));
+
+        assertThrows(SalaryOverlapException.class, () ->
+                salaryService.createSalaryRevision(1L, sameDayRequest, "manager", "127.0.0.1")
+        );
+
+        verify(salaryRecordRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Reject salary revision when overlapping with an existing historical closed record")
+    void testRejectOverlappingClosedRecord() {
+        SalaryRecord current = new SalaryRecord(employee, new BigDecimal("80000.00"), usd, "ANNUAL", LocalDate.of(2025, 1, 1), null, manager);
+        current.setId(5L);
+
+        CreateSalaryRequest request = new CreateSalaryRequest(
+                new BigDecimal("95000.00"), "USD", "ANNUAL", LocalDate.of(2025, 6, 1)
+        );
+
+        SalaryRecord conflicting = new SalaryRecord(employee, new BigDecimal("70000.00"), usd, "ANNUAL", LocalDate.of(2025, 5, 1), LocalDate.of(2025, 7, 1), manager);
+        conflicting.setId(4L);
+
+        when(employeeRepository.findById(1L)).thenReturn(Optional.of(employee));
+        when(currencyRepository.findById("USD")).thenReturn(Optional.of(usd));
+        when(userAccountRepository.findByUsername("manager")).thenReturn(Optional.of(manager));
+        when(salaryRecordRepository.findActiveByEmployeeId(1L)).thenReturn(Optional.of(current));
+        when(salaryRecordRepository.findOverlappingRecords(1L, request.effectiveFrom(), null, 5L))
+                .thenReturn(List.of(conflicting));
+
+        assertThrows(SalaryOverlapException.class, () ->
+                salaryService.createSalaryRevision(1L, request, "manager", "127.0.0.1")
+        );
+
+        verify(salaryRecordRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Get salary record throws ResourceNotFoundException when record not found")
+    void testGetSalaryRecordNotFound() {
+        when(salaryRecordRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(com.acme.salary.common.exception.ResourceNotFoundException.class, () ->
+                salaryService.getSalaryRecord(1L, 999L)
+        );
     }
 }

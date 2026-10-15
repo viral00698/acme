@@ -227,3 +227,36 @@ This document maintains an auditable, incremental log of engineering decisions, 
 - **Corrections Made**: N/A.
 - **Human / Architect Review**: All Module C, D, E, F UI requirements fully implemented and integrated with backend endpoints. Ready for Commit 11.
 - **Final Outcome**: Milestone 11 complete. Ready for Git commit 11 (`feat: integrate salary forms history and report exports`).
+
+---
+
+## Entry 12: Backend Unit & Integration Tests and Security Verification
+- **Date**: 2026-10-15
+- **Module / Task**: Testing — Comprehensive Backend Unit, Integration, and RBAC Security Tests (Commit 12)
+- **Goal**: Expand backend test coverage to rigorously verify rate limiting brute-force protection, edge-case salary overlap prevention (same-day collision, historical closed ranges), RBAC role security matrices for all roles (`HR_ADMIN`, `HR_MANAGER`, `HR_VIEWER`), reference data lookups, and global exception serialization.
+- **AI Tool Used**: Antigravity Assistant (Gemini 3.8 Flash High)
+- **Prompt Files**: `docs/ai/prompts/03-backend-prompt.md`
+- **Main Changes Generated or Suggested**:
+  - `RateLimitingIntegrationTest.java`: Verified 5-attempt sliding window threshold and HTTP 429 Too Many Requests response.
+  - `RbacAuthorizationIntegrationTest.java`: Verified comprehensive role matrix ensuring `HR_VIEWER` can read but not mutate or export CSV, `HR_MANAGER` can mutate and export but not view audit logs, and `HR_ADMIN` has full access.
+  - `OrganizationServiceTest.java`: Verified department, country, currency, and filtered job title retrieval.
+  - `GlobalExceptionHandlerTest.java`: Verified standard `ApiErrorResponse` mappings for 404, 409, 429, 403, and 401 exceptions.
+  - `SalaryServiceTest.java`: Added edge-case test suites for same-day collision rejection, historical closed period overlap rejection, and fail-fast transactional validation before record mutation.
+  - `docs/testing/test-strategy.md` & `docs/testing/test-results.md`: Complete QA documentation and execution metrics.
+- **Files Changed**:
+  - `backend/src/test/java/com/acme/salary/auth/security/RateLimitingIntegrationTest.java`
+  - `backend/src/test/java/com/acme/salary/security/RbacAuthorizationIntegrationTest.java`
+  - `backend/src/test/java/com/acme/salary/organization/service/OrganizationServiceTest.java`
+  - `backend/src/test/java/com/acme/salary/common/exception/GlobalExceptionHandlerTest.java`
+  - `backend/src/test/java/com/acme/salary/salary/service/SalaryServiceTest.java`
+  - `backend/src/main/java/com/acme/salary/salary/service/SalaryService.java`
+  - `backend/src/main/java/com/acme/salary/auth/security/LoginRateLimitService.java`
+  - `docs/testing/test-strategy.md`
+  - `docs/testing/test-results.md`
+  - `docs/ai/AI_WORKLOG.md`
+- **Tests Executed**:
+  - `.\mvnw.cmd test`: 62 tests run, 0 failures, 0 errors, 100% pass rate in 25.3s.
+- **Problems Discovered**: Minor assertion mismatch in reason phrases and initial ordering of overlap check in `SalaryService`.
+- **Corrections Made**: Reordered overlap check before active record mutation in `SalaryService` for pure fail-fast transactional safety; updated error assertions.
+- **Human / Architect Review**: All 62 backend unit and integration tests verified.
+- **Final Outcome**: Milestone 12 complete. Ready for Git commit 12 (`test: add backend unit and integration tests`).

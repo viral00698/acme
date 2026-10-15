@@ -38,4 +38,8 @@ public class LoginRateLimitService {
     public void recordSuccessfulAttempt(String key) {
         failureLog.remove(key);
     }
+
+    public void resetAttempts(String key) {
+        recordSuccessfulAttempt(key);
+    }
 }

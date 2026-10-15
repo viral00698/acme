@@ -110,15 +110,6 @@ public class SalaryService {
                         request.effectiveFrom(), activeRecord.getEffectiveFrom()
                 ));
             }
-
-            // Close active record: set effective_to to day before new start date
-            LocalDate newEffectiveTo = request.effectiveFrom().minusDays(1);
-            activeRecord.setEffectiveTo(newEffectiveTo);
-            salaryRecordRepository.save(activeRecord);
-
-            auditDetails.put("previousSalaryId", activeRecord.getId());
-            auditDetails.put("previousAmount", activeRecord.getAmount());
-            auditDetails.put("previousEffectiveTo", newEffectiveTo.toString());
         }
 
         // Verify no other overlapping historical/future records exist
@@ -132,6 +123,18 @@ public class SalaryService {
                     request.effectiveFrom(), conflict.getEffectiveFrom(),
                     conflict.getEffectiveTo() != null ? conflict.getEffectiveTo().toString() : "ongoing"
             ));
+        }
+
+        if (activeRecordOpt.isPresent()) {
+            SalaryRecord activeRecord = activeRecordOpt.get();
+            // Close active record: set effective_to to day before new start date
+            LocalDate newEffectiveTo = request.effectiveFrom().minusDays(1);
+            activeRecord.setEffectiveTo(newEffectiveTo);
+            salaryRecordRepository.save(activeRecord);
+
+            auditDetails.put("previousSalaryId", activeRecord.getId());
+            auditDetails.put("previousAmount", activeRecord.getAmount());
+            auditDetails.put("previousEffectiveTo", newEffectiveTo.toString());
         }
 
         // Insert new active salary record
