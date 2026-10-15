@@ -330,3 +330,54 @@ This document maintains an auditable, incremental log of engineering decisions, 
 - **Human / Architect Review**: Seeding performance meets enterprise benchmarks (< 5 seconds for 10k entities); all domain constraints and effective dating rules validated. Ready for Commit 14.
 - **Final Outcome**: Milestone 14 complete. Ready for Git commit 14 (`feat: add deterministic 10000 employee seed data`).
 
+---
+
+## Entry 15: Docker Deployment and Health Checks
+- **Date**: 2026-10-15
+- **Module / Task**: DevOps & Deployment — Multi-Stage Dockerfile and Docker Compose Topology (Commit 15)
+- **Goal**: Deliver a complete, reproducible containerized deployment architecture orchestrating PostgreSQL 16, Spring Boot 3 backend, and Angular 19 / Nginx reverse proxy gateway, with non-root security, healthcheck monitoring, and environment-driven configurations.
+- **AI Tool Used**: Antigravity Assistant (Gemini 3.8 Flash High)
+- **Prompt Files**: `docs/ai/prompts/05-devops-prompt.md`
+- **Main Changes Generated or Suggested**:
+  - `backend/Dockerfile`:
+    - Multi-stage build leveraging `maven:3.9.9-eclipse-temurin-17-alpine` builder and `eclipse-temurin:17-jre-alpine` runtime.
+    - Security hardening: Created unprivileged `appuser:appgroup` system user.
+    - JVM container optimization: `-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0`.
+    - Health check: Actuator endpoint probe (`curl -f http://localhost:8080/actuator/health`).
+  - `backend/.dockerignore`: Prevents local build artifacts, logs, and IDE caches from inflating context.
+  - `frontend/Dockerfile`:
+    - Multi-stage build with `node:20-alpine` builder running production optimization and `nginx:alpine` runtime.
+    - Health check: Web spider probe (`wget --quiet --tries=1 --spider http://localhost/`).
+  - `frontend/nginx.conf`:
+    - Production Nginx server configuration with gzip compression for text, scripts, and JSON payloads.
+    - Reverse proxy mapping `/api/` traffic directly to Spring Boot backend container.
+    - Proxy routes for Swagger UI (`/swagger-ui/`) and OpenAPI specs (`/v3/api-docs/`).
+    - Standard enterprise security headers (`X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, CSP).
+    - Long-lived cache headers for immutable static assets (`Cache-Control: public, max-age=31536000, immutable`).
+    - Angular HTML5 pushState routing fallback (`try_files $uri $uri/ /index.html`).
+  - `frontend/.dockerignore`: Excludes `node_modules`, `dist`, `.angular`, and test coverage directories.
+  - `docker-compose.yml`:
+    - Declarative 3-tier topology linking `postgres`, `backend`, and `frontend` across `acme-network`.
+    - Health-dependent startup sequence: `backend` waits for `postgres` healthy (`pg_isready`), and `frontend` waits for `backend` healthy (`/actuator/health`).
+    - Configurable environment variable defaults for ports, database credentials, JWT secrets, and auto-seeding.
+  - `.dockerignore`: Root workspace exclusions.
+  - `backend/src/main/resources/application.yml`: Set `SEED_INITIAL_DATA:true` by default so new container databases automatically seed 10,000 employees.
+- **Files Changed**:
+  - `backend/Dockerfile`
+  - `backend/.dockerignore`
+  - `backend/src/main/resources/application.yml`
+  - `frontend/Dockerfile`
+  - `frontend/nginx.conf`
+  - `frontend/.dockerignore`
+  - `docker-compose.yml`
+  - `.dockerignore`
+  - `docs/ai/AI_WORKLOG.md`
+- **Tests Executed**:
+  - `docker compose config`: Validated syntax, service bindings, healthchecks, and environment mappings with 0 errors.
+  - `.\mvnw.cmd test`: All 64 backend tests passing.
+- **Problems Discovered**: Obsolete `version` attribute in compose specification identified during validation.
+- **Corrections Made**: Upgraded to versionless top-level Compose specification.
+- **Human / Architect Review**: Container setup meets production standards with non-root runtime, robust reverse proxy, and cascading health checks. Ready for Commit 15.
+- **Final Outcome**: Milestone 15 complete. Ready for Git commit 15 (`build: add Docker deployment and health checks`).
+
+
