@@ -107,19 +107,33 @@ This document maintains an auditable, incremental log of engineering decisions, 
     - `EmployeeService`: Transactional operations for search, get, create, update, and status change with uniqueness validation on employee code and email. Enforced protection against physical deletion when salary records exist.
     - `EmployeeController`: REST endpoints `/api/v1/employees`, `/employees/{id}`, `/employees/{id}/status` secured via `@PreAuthorize`.
   - Unit tests in `EmployeeServiceTest` and MockMvc integration tests in `EmployeeControllerIntegrationTest`.
+- **Tests Executed**: 19 tests executed, 0 failures, 0 errors, 100% passed.
+- **Outcome**: Milestone 6 complete. Git commit `805a598` created.
+
+---
+
+## Entry 07: Effective-Dated Salary Management
+- **Date**: 2026-10-15
+- **Module / Task**: Module C — Effective-Dated Salary Management
+- **Goal**: Implement transactional compensation revisions, effective date lifecycle rules, overlapping date prevention, optimistic locking (`@Version`), and salary history auditing.
+- **AI Tool Used**: Antigravity Assistant (Gemini 3.8 Flash High)
+- **Prompt Files**: `docs/ai/prompts/03-backend-prompt.md`
+- **Main Changes Generated or Suggested**:
+  - `SalaryRecord` entity with `BigDecimal` amounts, `@Version` optimistic locking, currency linkage, and date range validity checks.
+  - `SalaryRecordRepository`: Custom queries for active record lookups (`effectiveTo IS NULL`) and overlap detection (`findOverlappingRecords`).
+  - `SalaryService`: Transactional orchestration enforcing business invariants:
+    - Initial compensation creates active record.
+    - Subsequent revision checks new date > current date, closes active record (`effectiveTo = newFrom - 1 day`), inserts new active record, and records audit entry.
+    - Overlapping/inverted dates rejected with `SalaryOverlapException` (HTTP 409).
+  - `SalaryController`: REST endpoints `GET /api/v1/employees/{id}/salaries`, `POST /api/v1/employees/{id}/salaries`, `GET /api/v1/employees/{id}/salaries/{salaryId}`.
+  - Unit tests in `SalaryServiceTest` and MockMvc integration tests in `SalaryControllerIntegrationTest`.
 - **Files Changed**:
-  - `backend/src/main/java/com/acme/salary/organization/**`
-  - `backend/src/main/java/com/acme/salary/audit/**`
-  - `backend/src/main/java/com/acme/salary/employee/**`
-  - `backend/src/main/java/com/acme/salary/salary/entity/SalaryRecord.java`
-  - `backend/src/main/java/com/acme/salary/salary/repository/SalaryRecordRepository.java`
-  - `backend/src/test/java/com/acme/salary/employee/**`
-  - `backend/src/test/resources/data.sql`
+  - `backend/src/main/java/com/acme/salary/salary/**`
+  - `backend/src/test/java/com/acme/salary/salary/**`
   - `docs/ai/AI_WORKLOG.md`
 - **Tests Executed**:
-  - `mvnw.cmd test`: 19 tests executed, 0 failures, 0 errors, 100% passed.
-- **Problems Discovered**:
-  - In `data.sql`, hardcoded primary key `1` conflicted with H2 identity sequence generation on subsequent inserts; resolved by omitting manual id on employee insert.
-- **Corrections Made**: Corrected `@PatchMapping` annotation and Mockito ambiguous matcher.
-- **Human / Architect Review**: Full compliance with 3NF relational model, audit integration, and RBAC authorization.
-- **Final Outcome**: Milestone 6 complete. Ready for Git commit 6 (`feat: implement employee management APIs`).
+  - `mvnw.cmd test`: 26 tests executed, 0 failures, 0 errors, 100% passed.
+- **Problems Discovered**: None. All salary transition rules and overlap detection passed.
+- **Corrections Made**: N/A.
+- **Human / Architect Review**: ACID transaction boundaries, optimistic locking, and single-active-salary invariant verified. Ready for Commit 7.
+- **Final Outcome**: Milestone 7 complete. Ready for Git commit 7 (`feat: implement effective-dated salary management`).
