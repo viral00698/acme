@@ -1,0 +1,137 @@
+<div class="audit-container">
+  <div class="audit-header">
+    <div>
+      <h1 class="page-title">Security & Compensation Audit Trail</h1>
+      <p class="page-subtitle">Immutable chronological audit log capturing sensitive operations, profile updates, and salary revisions</p>
+    </div>
+  </div>
+
+  <!-- Filters Card -->
+  <mat-card class="filter-card">
+    <form [formGroup]="filterForm" class="filter-form" (ngSubmit)="applyFilters()">
+      <mat-form-field appearance="outline" class="filter-field" subscriptSizing="dynamic">
+        <mat-label>Entity Type</mat-label>
+        <mat-select formControlName="entityName">
+          <mat-option value="">All Entities</mat-option>
+          <mat-option value="Employee">Employee</mat-option>
+          <mat-option value="SalaryRecord">SalaryRecord</mat-option>
+          <mat-option value="UserAccount">UserAccount</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field" subscriptSizing="dynamic">
+        <mat-label>Actor (Username)</mat-label>
+        <input matInput formControlName="actor" placeholder="e.g. admin">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field" subscriptSizing="dynamic">
+        <mat-label>Entity ID</mat-label>
+        <input matInput type="number" formControlName="entityId" placeholder="e.g. 101">
+      </mat-form-field>
+
+      <div class="action-buttons">
+        <button mat-flat-button color="primary" type="submit">
+          <mat-icon>search</mat-icon> Filter
+        </button>
+        <button mat-stroked-button type="button" (click)="resetFilters()">
+          <mat-icon>refresh</mat-icon> Reset
+        </button>
+      </div>
+    </form>
+  </mat-card>
+
+  <!-- Table Card -->
+  <mat-card class="table-card">
+    <div class="table-loading-shade" *ngIf="isLoading()">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+
+    <div class="table-responsive">
+      <table mat-table [dataSource]="auditLogs()" class="mat-elevation-z0">
+        <!-- ID -->
+        <ng-container matColumnDef="id">
+          <th mat-header-cell *matHeaderCellDef>#</th>
+          <td mat-cell *matCellDef="let log">{{ log.id }}</td>
+        </ng-container>
+
+        <!-- Action -->
+        <ng-container matColumnDef="action">
+          <th mat-header-cell *matHeaderCellDef>Action</th>
+          <td mat-cell *matCellDef="let log">
+            <span class="badge" [ngClass]="{
+              'badge-success': log.action.includes('CREATE') || log.action.includes('REVISE'),
+              'badge-info': log.action.includes('UPDATE') || log.action.includes('LOGIN'),
+              'badge-danger': log.action.includes('DELETE') || log.action.includes('TERMINATE'),
+              'badge-warning': log.action.includes('STATUS')
+            }">
+              {{ log.action }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Entity Name -->
+        <ng-container matColumnDef="entityName">
+          <th mat-header-cell *matHeaderCellDef>Entity</th>
+          <td mat-cell *matCellDef="let log">
+            <strong>{{ log.entityType || log.entityName }}</strong>
+          </td>
+        </ng-container>
+
+        <!-- Entity ID -->
+        <ng-container matColumnDef="entityId">
+          <th mat-header-cell *matHeaderCellDef>Entity ID</th>
+          <td mat-cell *matCellDef="let log">{{ log.entityId }}</td>
+        </ng-container>
+
+        <!-- Actor -->
+        <ng-container matColumnDef="actor">
+          <th mat-header-cell *matHeaderCellDef>Actor</th>
+          <td mat-cell *matCellDef="let log">
+            <span class="actor-tag">{{ log.performedBy || log.actor }}</span>
+          </td>
+        </ng-container>
+
+        <!-- IP Address -->
+        <ng-container matColumnDef="ipAddress">
+          <th mat-header-cell *matHeaderCellDef>IP Address</th>
+          <td mat-cell *matCellDef="let log" class="ip-cell">{{ log.ipAddress || '127.0.0.1' }}</td>
+        </ng-container>
+
+        <!-- Details -->
+        <ng-container matColumnDef="details">
+          <th mat-header-cell *matHeaderCellDef>Change Details / Payload</th>
+          <td mat-cell *matCellDef="let log" class="details-cell">
+            <span class="details-text" [title]="log.details">{{ log.details || '-' }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Created At -->
+        <ng-container matColumnDef="createdAt">
+          <th mat-header-cell *matHeaderCellDef>Timestamp</th>
+          <td mat-cell *matCellDef="let log" class="timestamp-cell">
+            {{ (log.performedAt || log.createdAt) | date:'medium' }}
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="audit-row"></tr>
+
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell empty-table" [attr.colspan]="displayedColumns.length">
+            <mat-icon>history_toggle_off</mat-icon>
+            <p>No audit events match current criteria.</p>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <mat-paginator
+      [length]="totalElements()"
+      [pageSize]="pageSize()"
+      [pageIndex]="pageIndex()"
+      [pageSizeOptions]="[10, 20, 50, 100]"
+      (page)="onPageChange($event)"
+      showFirstLastButtons>
+    </mat-paginator>
+  </mat-card>
+</div>

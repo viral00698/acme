@@ -1,0 +1,85 @@
+<h2 mat-dialog-title>
+  Revise Compensation Record
+</h2>
+
+<mat-dialog-content class="dialog-content">
+  <p class="dialog-desc">
+    Updating salary for <strong>{{ data.employeeName }}</strong>. Applying this revision will supersede the current active record starting on the effective date.
+  </p>
+
+  <div class="error-banner" *ngIf="errorMessage()">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <form [formGroup]="salaryForm" class="form-grid">
+    <mat-form-field appearance="outline" class="form-field">
+      <mat-label>Salary Amount</mat-label>
+      <input matInput type="number" step="0.01" formControlName="amount" placeholder="e.g. 85000">
+      <mat-icon matPrefix>attach_money</mat-icon>
+      <mat-error *ngIf="salaryForm.get('amount')?.hasError('required')">
+        Salary amount is required
+      </mat-error>
+      <mat-error *ngIf="salaryForm.get('amount')?.hasError('min')">
+        Amount must be greater than zero
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form-field">
+      <mat-label>Currency</mat-label>
+      <mat-select formControlName="currencyCode">
+        <mat-option *ngFor="let curr of currencies()" [value]="curr.currencyCode">
+          {{ curr.currencyCode }} - {{ curr.name }} ({{ curr.symbol }})
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="salaryForm.get('currencyCode')?.hasError('required')">
+        Currency is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form-field">
+      <mat-label>Pay Frequency</mat-label>
+      <mat-select formControlName="payFrequency">
+        <mat-option value="ANNUAL">ANNUAL</mat-option>
+        <mat-option value="MONTHLY">MONTHLY</mat-option>
+        <mat-option value="BIWEEKLY">BIWEEKLY</mat-option>
+      </mat-select>
+      <mat-error *ngIf="salaryForm.get('payFrequency')?.hasError('required')">
+        Pay frequency is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form-field">
+      <mat-label>Effective Start Date</mat-label>
+      <input matInput type="date" formControlName="effectiveFrom">
+      <mat-error *ngIf="salaryForm.get('effectiveFrom')?.hasError('required')">
+        Effective date is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form-field full-row">
+      <mat-label>Change Reason</mat-label>
+      <mat-select formControlName="changeReason">
+        <mat-option *ngFor="let reason of reasons" [value]="reason">
+          {{ reason }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="salaryForm.get('changeReason')?.hasError('required')">
+        Change reason is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form-field full-row">
+      <mat-label>Administrative Notes (Optional)</mat-label>
+      <textarea matInput formControlName="notes" rows="2" placeholder="e.g. Approved during Q4 compensation review cycle"></textarea>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="dialog-actions">
+  <button mat-button (click)="onCancel()" [disabled]="isLoading()">Cancel</button>
+  <button mat-flat-button color="primary" (click)="onSubmit()" [disabled]="isLoading() || salaryForm.invalid">
+    <mat-spinner diameter="20" *ngIf="isLoading()"></mat-spinner>
+    <span *ngIf="!isLoading()">Apply Revision</span>
+  </button>
+</mat-dialog-actions>

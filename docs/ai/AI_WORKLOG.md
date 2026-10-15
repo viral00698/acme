@@ -193,3 +193,37 @@ This document maintains an auditable, incremental log of engineering decisions, 
 - **Corrections Made**: Installed `@angular/animations` and `vite`, adjusted budgets in `angular.json` to 2MB warning/3MB error, fixed type narrowing for `jobTitleId` in form dialog.
 - **Human / Architect Review**: All frontend dashboard and employee directory specifications met. Ready for Commit 10.
 - **Final Outcome**: Milestone 10 complete. Ready for Git commit 10 (`feat: build responsive Angular dashboard and employee screens`).
+
+---
+
+## Entry 11: Salary Forms, History Timeline, Reports and CSV Export
+- **Date**: 2026-10-15
+- **Module / Task**: Frontend UI — Salary Revisions, History Timeline, Reports, and Audit Trail (Commit 11)
+- **Goal**: Integrate compensation management into the frontend application: interactive salary revision dialog, effective-dated history timeline in employee detail, multi-criteria compensation reports, formula-safe streaming CSV downloads, and full administrator audit trail.
+- **AI Tool Used**: Antigravity Assistant (Gemini 3.8 Flash High)
+- **Prompt Files**: `docs/ai/prompts/04-frontend-prompt.md`
+- **Main Changes Generated or Suggested**:
+  - `core/services/salary.service.ts`: API client for `/api/v1/employees/{id}/salaries` (history, create revision, get record).
+  - `core/services/report.service.ts`: API client for `/api/v1/reports/salaries` (paginated querying and streaming CSV download via Blob URL).
+  - `core/services/audit.service.ts`: API client for `/api/v1/audit-logs` (filtering by actor, entity type, entity ID).
+  - `features/employees/salary-dialog/*`: Reactive revision form with validation for amount, currency, frequency, effective start date, change reason, and notes; handling 409 conflict and overlap responses.
+  - `features/employees/employee-detail/*`: Added compensation history timeline card with active/superseded status badges, date ranges, and revision dialog trigger.
+  - `features/reports/*`: Interactive reports dashboard with multi-criteria filters (currency, department, country, status, salary range), paginated results table, single-currency guideline note, and streaming CSV export button.
+  - `features/audit/*`: Audit trail table for HR Administrators with action color coding, actor tracking, entity ID, and change details.
+- **Files Changed**:
+  - `frontend/src/app/core/services/salary.service.ts`
+  - `frontend/src/app/core/services/report.service.ts`
+  - `frontend/src/app/core/services/audit.service.ts`
+  - `frontend/src/app/features/employees/salary-dialog/**`
+  - `frontend/src/app/features/employees/employee-detail/**`
+  - `frontend/src/app/features/reports/**`
+  - `frontend/src/app/features/audit/**`
+  - `docs/ai/AI_WORKLOG.md`
+- **Tests Executed**:
+  - `cmd /c "npm.cmd run build"`: Complete frontend build succeeded in 6.0s. All lazy chunks generated.
+  - `cmd /c "npm.cmd test -- --watch=false"`: Vitest tests passing.
+  - `.\mvnw.cmd test`: All 45 backend unit & integration tests passing.
+- **Problems Discovered**: None. All frontend services match backend contracts and models.
+- **Corrections Made**: N/A.
+- **Human / Architect Review**: All Module C, D, E, F UI requirements fully implemented and integrated with backend endpoints. Ready for Commit 11.
+- **Final Outcome**: Milestone 11 complete. Ready for Git commit 11 (`feat: integrate salary forms history and report exports`).
