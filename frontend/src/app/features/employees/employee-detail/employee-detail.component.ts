@@ -10,10 +10,12 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { EmployeeService } from '../../../core/services/employee.service';
 import { SalaryService } from '../../../core/services/salary.service';
+import { AuditService } from '../../../core/services/audit.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { EmployeeDetail } from '../../../core/models/employee.model';
 import { SalaryRecord } from '../../../core/models/salary.model';
+import { AuditLog } from '../../../core/models/audit.model';
 import { EmployeeFormDialogComponent } from '../employee-form-dialog/employee-form-dialog.component';
 import { StatusDialogComponent } from '../status-dialog/status-dialog.component';
 import { SalaryDialogComponent } from '../salary-dialog/salary-dialog.component';
@@ -40,6 +42,7 @@ export class EmployeeDetailComponent implements OnInit {
   private router = inject(Router);
   private employeeService = inject(EmployeeService);
   private salaryService = inject(SalaryService);
+  private auditService = inject(AuditService);
   authService = inject(AuthService);
   private notification = inject(NotificationService);
   private dialog = inject(MatDialog);
@@ -47,8 +50,10 @@ export class EmployeeDetailComponent implements OnInit {
   employeeId!: number;
   employee = signal<EmployeeDetail | null>(null);
   salaryHistory = signal<SalaryRecord[]>([]);
+  salaryAudits = signal<AuditLog[]>([]);
   isLoading = signal<boolean>(true);
   isLoadingHistory = signal<boolean>(false);
+  isLoadingAudits = signal<boolean>(false);
 
   historyColumns: string[] = [
     'effectivePeriod',
@@ -60,12 +65,23 @@ export class EmployeeDetailComponent implements OnInit {
     'createdAt'
   ];
 
+  auditColumns: string[] = [
+    'action',
+    'actor',
+    'ipAddress',
+    'details',
+    'createdAt'
+  ];
+
   ngOnInit(): void {
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam) {
       this.employeeId = Number(idParam);
       this.loadEmployee();
       this.loadSalaryHistory();
+      if (this.authService.isAdmin()) {
+        this.loadSalaryAudits();
+      }
     } else {
       this.router.navigate(['/employees']);
     }
@@ -77,7 +93,41 @@ export class EmployeeDetailComponent implements OnInit {
       next: (res) => {
         this.isLoading.set(false);
         if (res.success && res.data) {
-          this.employee.set(res.data);
+          const raw = res.data;
+          const deptName = raw.departmentName || (typeof raw.department === 'object' ? raw.department?.name : '') || '';
+          const countryName = raw.countryName || (typeof raw.country === 'object' ? raw.country?.name : '') || '';
+          const countryCode = raw.countryCode || (typeof raw.country === 'object' && raw.country ? ((raw.country as any).isoCode || (raw.country as any).code) : '') || '';
+          const jobTitleStr = typeof raw.jobTitle === 'string' ? raw.jobTitle : ((raw.jobTitle as any)?.title || '');
+
+          const normalized: EmployeeDetail = {
+            ...raw,
+            departmentName: deptName,
+            countryName: countryName,
+            countryCode: countryCode,
+            jobTitle: jobTitleStr,
+            department: {
+              id: raw.departmentId || (typeof raw.department === 'object' ? raw.department?.id : undefined),
+              name: deptName,
+              code: countryCode,
+              departmentCode: (typeof raw.department === 'object' ? (raw.department as any)?.departmentCode : '') || deptName.substring(0, 3).toUpperCase()
+            },
+            country: {
+              id: raw.countryId || (typeof raw.country === 'object' ? raw.country?.id : undefined),
+              name: countryName,
+              code: countryCode,
+              isoCode: countryCode
+            },
+            currentSalary: raw.currentSalary ? raw.currentSalary : (raw.currentSalaryAmount != null ? {
+              id: 0,
+              amount: raw.currentSalaryAmount,
+              currencyCode: raw.currentSalaryCurrency || 'USD',
+              currencySymbol: raw.currentSalarySymbol || '$',
+              payFrequency: raw.currentPayFrequency || 'ANNUAL',
+              effectiveFrom: raw.currentSalaryEffectiveFrom || '',
+              effectiveTo: undefined
+            } : undefined)
+          };
+          this.employee.set(normalized);
         }
       },
       error: () => {
@@ -94,7 +144,35 @@ export class EmployeeDetailComponent implements OnInit {
       next: (res) => {
         this.isLoadingHistory.set(false);
         if (res.success && res.data) {
-          this.salaryHistory.set(res.data.records);
+          const historyList: SalaryRecord[] = res.data.history || res.data.records || [];
+          this.salaryHistory.set(historyList);
+
+          // If current salary returned from salary history endpoint, sync into employee signal
+          if (res.data.currentSalary) {
+            const current = this.employee();
+            if (current) {
+              const cs = res.data.currentSalary;
+              this.employee.set({
+                ...current,
+                currentSalaryAmount: cs.amount,
+                currentSalaryCurrency: cs.currencyCode,
+                currentSalarySymbol: cs.currencySymbol,
+                currentPayFrequency: cs.payFrequency,
+                currentSalaryEffectiveFrom: cs.effectiveFrom,
+                currentSalary: {
+                  id: cs.id,
+                  amount: cs.amount,
+                  currencyCode: cs.currencyCode,
+                  currencySymbol: cs.currencySymbol,
+                  payFrequency: cs.payFrequency,
+                  effectiveFrom: cs.effectiveFrom,
+                  effectiveTo: cs.effectiveTo,
+                  changeReason: cs.changeReason,
+                  notes: cs.notes
+                }
+              });
+            }
+          }
         }
       },
       error: () => {
@@ -103,19 +181,82 @@ export class EmployeeDetailComponent implements OnInit {
     });
   }
 
+  loadSalaryAudits(): void {
+    if (!this.authService.isAdmin()) return;
+    this.isLoadingAudits.set(true);
+    this.auditService.getAuditLogs({
+      entityName: 'SALARY_RECORD',
+      entityId: this.employeeId,
+      size: 50
+    }).subscribe({
+      next: (res) => {
+        this.isLoadingAudits.set(false);
+        if (res.success && res.data) {
+          this.salaryAudits.set(res.data.content);
+        }
+      },
+      error: () => {
+        this.isLoadingAudits.set(false);
+      }
+    });
+  }
+
+  getDepartment(emp: EmployeeDetail | null): string {
+    if (!emp) return '';
+    return emp.departmentName || (emp.department as any)?.name || 'N/A';
+  }
+
+  getDepartmentCode(emp: EmployeeDetail | null): string {
+    if (!emp) return '';
+    return (emp.department as any)?.departmentCode || (emp.department as any)?.code || (emp.departmentName ? emp.departmentName.substring(0, 3).toUpperCase() : '');
+  }
+
+  getCountry(emp: EmployeeDetail | null): string {
+    if (!emp) return '';
+    const name = emp.countryName || (emp.country as any)?.name || 'N/A';
+    const code = emp.countryCode || (emp.country as any)?.code || (emp.country as any)?.isoCode || '';
+    return code ? `${name} (${code})` : name;
+  }
+
+  getJobTitle(emp: EmployeeDetail | null): string {
+    if (!emp) return '';
+    if (typeof emp.jobTitle === 'string') return emp.jobTitle;
+    return (emp.jobTitle as any)?.title || 'N/A';
+  }
+
+  getCurrentSalary(emp: EmployeeDetail | null) {
+    if (!emp) return null;
+    if (emp.currentSalary) return emp.currentSalary;
+    if (emp.currentSalaryAmount != null) {
+      return {
+        amount: emp.currentSalaryAmount,
+        currencyCode: emp.currentSalaryCurrency || 'USD',
+        currencySymbol: emp.currentSalarySymbol || '$',
+        payFrequency: emp.currentPayFrequency || 'ANNUAL',
+        effectiveFrom: emp.currentSalaryEffectiveFrom || '',
+        effectiveTo: undefined,
+        changeReason: undefined,
+        notes: undefined
+      };
+    }
+    return null;
+  }
+
   openReviseSalaryDialog(): void {
     const current = this.employee();
     if (!current) return;
+
+    const currSalary = this.getCurrentSalary(current);
 
     const dialogRef = this.dialog.open(SalaryDialogComponent, {
       width: '580px',
       data: {
         employeeId: current.id,
         employeeName: `${current.firstName} ${current.lastName}`,
-        currentSalary: current.currentSalary ? {
-          amount: current.currentSalary.amount,
-          currencyCode: current.currentSalary.currencyCode,
-          payFrequency: current.currentSalary.payFrequency
+        currentSalary: currSalary ? {
+          amount: currSalary.amount,
+          currencyCode: currSalary.currencyCode,
+          payFrequency: currSalary.payFrequency
         } : undefined
       }
     });
@@ -124,6 +265,9 @@ export class EmployeeDetailComponent implements OnInit {
       if (res) {
         this.loadEmployee();
         this.loadSalaryHistory();
+        if (this.authService.isAdmin()) {
+          this.loadSalaryAudits();
+        }
       }
     });
   }

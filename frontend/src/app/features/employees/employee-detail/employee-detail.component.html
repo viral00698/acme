@@ -15,7 +15,7 @@
     <mat-card class="profile-header-card">
       <div class="header-main">
         <div class="avatar-circle">
-          <span>{{ emp.firstName.charAt(0) }}{{ emp.lastName.charAt(0) }}</span>
+          <span>{{ (emp.firstName ? emp.firstName.charAt(0) : '') + (emp.lastName ? emp.lastName.charAt(0) : '') }}</span>
         </div>
 
         <div class="title-details">
@@ -36,13 +36,13 @@
               <mat-icon>badge</mat-icon> {{ emp.employeeCode }}
             </span>
             <span class="meta-item">
-              <mat-icon>work</mat-icon> {{ emp.jobTitle.title }}
+              <mat-icon>work</mat-icon> {{ getJobTitle(emp) }}
             </span>
             <span class="meta-item">
-              <mat-icon>domain</mat-icon> {{ emp.department.name }}
+              <mat-icon>domain</mat-icon> {{ getDepartment(emp) }}
             </span>
             <span class="meta-item">
-              <mat-icon>place</mat-icon> {{ emp.country.name }} ({{ emp.country.isoCode }})
+              <mat-icon>place</mat-icon> {{ getCountry(emp) }}
             </span>
           </div>
         </div>
@@ -68,17 +68,25 @@
             <span class="info-label">Corporate Email</span>
             <span class="info-value">{{ emp.email }}</span>
           </div>
+          <div class="info-item" *ngIf="emp.phoneNumber">
+            <span class="info-label">Phone Number</span>
+            <span class="info-value">{{ emp.phoneNumber }}</span>
+          </div>
           <div class="info-item">
             <span class="info-label">Hire Date</span>
             <span class="info-value">{{ emp.hireDate | date:'mediumDate' }}</span>
           </div>
           <div class="info-item">
             <span class="info-label">Department</span>
-            <span class="info-value">{{ emp.department.name }} ({{ emp.department.departmentCode }})</span>
+            <span class="info-value">{{ getDepartment(emp) }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Job Title</span>
+            <span class="info-value">{{ getJobTitle(emp) }}</span>
           </div>
           <div class="info-item">
             <span class="info-label">Operational Country</span>
-            <span class="info-value">{{ emp.country.name }} ({{ emp.country.isoCode }})</span>
+            <span class="info-value">{{ getCountry(emp) }}</span>
           </div>
           <div class="info-item">
             <span class="info-label">Record Created</span>
@@ -93,34 +101,34 @@
           <h3 class="card-title">Current Compensation</h3>
           <button mat-flat-button color="accent" *ngIf="authService.isManager()" (click)="openReviseSalaryDialog()">
             <mat-icon>price_change</mat-icon>
-            {{ emp.currentSalary ? 'Revise Salary' : 'Set Initial Salary' }}
+            {{ getCurrentSalary(emp) ? 'Revise Salary' : 'Set Initial Salary' }}
           </button>
         </div>
 
-        <div *ngIf="emp.currentSalary; else noCurrentSalary" class="current-salary-info">
+        <div *ngIf="getCurrentSalary(emp) as curr; else noCurrentSalary" class="current-salary-info">
           <div class="salary-highlight">
             <span class="salary-amount">
-              {{ emp.currentSalary.currencySymbol }}{{ emp.currentSalary.amount | number:'1.2-2' }}
+              {{ curr.currencySymbol || '$' }}{{ curr.amount | number:'1.2-2' }}
             </span>
-            <span class="salary-currency">{{ emp.currentSalary.currencyCode }} / {{ emp.currentSalary.payFrequency }}</span>
+            <span class="salary-currency">{{ curr.currencyCode }} / {{ curr.payFrequency }}</span>
           </div>
 
           <div class="salary-meta-grid">
             <div class="meta-field">
               <span class="meta-label">Effective From</span>
-              <span class="meta-value">{{ emp.currentSalary.effectiveFrom | date:'mediumDate' }}</span>
+              <span class="meta-value">{{ curr.effectiveFrom | date:'mediumDate' }}</span>
             </div>
             <div class="meta-field">
               <span class="meta-label">Effective To</span>
-              <span class="meta-value">{{ emp.currentSalary.effectiveTo ? (emp.currentSalary.effectiveTo | date:'mediumDate') : 'Present (Active)' }}</span>
+              <span class="meta-value">{{ curr.effectiveTo ? (curr.effectiveTo | date:'mediumDate') : 'Present (Active)' }}</span>
             </div>
-            <div class="meta-field full-span" *ngIf="emp.currentSalary.changeReason">
+            <div class="meta-field full-span" *ngIf="curr.changeReason">
               <span class="meta-label">Change Reason</span>
-              <span class="meta-value">{{ emp.currentSalary.changeReason }}</span>
+              <span class="meta-value">{{ curr.changeReason }}</span>
             </div>
-            <div class="meta-field full-span" *ngIf="emp.currentSalary.notes">
+            <div class="meta-field full-span" *ngIf="curr.notes">
               <span class="meta-label">Notes</span>
-              <span class="meta-value">{{ emp.currentSalary.notes }}</span>
+              <span class="meta-value">{{ curr.notes }}</span>
             </div>
           </div>
         </div>
@@ -166,7 +174,7 @@
             <th mat-header-cell *matHeaderCellDef>Salary Amount</th>
             <td mat-cell *matCellDef="let record">
               <span class="salary-cell-amount">
-                {{ record.currencySymbol }}{{ record.amount | number:'1.2-2' }}
+                {{ record.currencySymbol || '$' }}{{ record.amount | number:'1.2-2' }}
               </span>
               <span class="salary-cell-curr">{{ record.currencyCode }}</span>
             </td>
@@ -190,9 +198,9 @@
 
           <!-- Reason -->
           <ng-container matColumnDef="reason">
-            <th mat-header-cell *matHeaderCellDef>Revision Reason</th>
+            <th mat-header-cell *matHeaderCellDef>Revision Context</th>
             <td mat-cell *matCellDef="let record">
-              <span>{{ record.changeReason || 'N/A' }}</span>
+              <span>{{ record.changeReason || (record.active ? 'Active Base Rate' : 'Superseded Rate') }}</span>
               <small class="record-note" *ngIf="record.notes">{{ record.notes }}</small>
             </td>
           </ng-container>
@@ -200,7 +208,7 @@
           <!-- Modified By -->
           <ng-container matColumnDef="modifiedBy">
             <th mat-header-cell *matHeaderCellDef>Authorized By</th>
-            <td mat-cell *matCellDef="let record">{{ record.createdByName || 'SYSTEM' }}</td>
+            <td mat-cell *matCellDef="let record">{{ record.createdByUsername || record.createdByName || 'SYSTEM' }}</td>
           </ng-container>
 
           <!-- Created At -->
@@ -218,6 +226,74 @@
             <td class="mat-cell empty-table" [attr.colspan]="historyColumns.length">
               <mat-icon>history_toggle_off</mat-icon>
               <p>No historical salary records found for this employee.</p>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </mat-card>
+
+    <!-- Salary Audit Trail Card (HR_ADMIN only) -->
+    <mat-card class="history-card audit-history-card" *ngIf="authService.isAdmin()">
+      <div class="history-header">
+        <div>
+          <h3 class="card-title">Salary Modification & Revision Audit Trail</h3>
+          <span class="card-subtitle">Immutable security log of all compensation actions executed for this employee</span>
+        </div>
+      </div>
+
+      <div class="history-loading" *ngIf="isLoadingAudits()">
+        <mat-spinner diameter="30"></mat-spinner>
+      </div>
+
+      <div class="table-responsive" *ngIf="!isLoadingAudits()">
+        <table mat-table [dataSource]="salaryAudits()" class="mat-elevation-z0">
+          <!-- Action -->
+          <ng-container matColumnDef="action">
+            <th mat-header-cell *matHeaderCellDef>Action</th>
+            <td mat-cell *matCellDef="let log">
+              <span class="badge" [ngClass]="log.action === 'SALARY_CREATION' ? 'badge-success' : 'badge-warning'">
+                {{ log.action }}
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- Actor -->
+          <ng-container matColumnDef="actor">
+            <th mat-header-cell *matHeaderCellDef>Authorized Actor</th>
+            <td mat-cell *matCellDef="let log">
+              <strong>{{ log.actorUsername || log.performedBy || log.actor || 'SYSTEM' }}</strong>
+            </td>
+          </ng-container>
+
+          <!-- IP Address -->
+          <ng-container matColumnDef="ipAddress">
+            <th mat-header-cell *matHeaderCellDef>Client IP</th>
+            <td mat-cell *matCellDef="let log" class="ip-cell">{{ log.clientIp || log.ipAddress || '127.0.0.1' }}</td>
+          </ng-container>
+
+          <!-- Change Details -->
+          <ng-container matColumnDef="details">
+            <th mat-header-cell *matHeaderCellDef>Audit Details</th>
+            <td mat-cell *matCellDef="let log" class="audit-details-cell">
+              <span class="audit-details-code">{{ log.detailsJson || log.details || '-' }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Timestamp -->
+          <ng-container matColumnDef="createdAt">
+            <th mat-header-cell *matHeaderCellDef>Timestamp</th>
+            <td mat-cell *matCellDef="let log" class="timestamp-cell">
+              {{ (log.createdAt || log.performedAt) | date:'medium' }}
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="auditColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: auditColumns;"></tr>
+
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell empty-table" [attr.colspan]="auditColumns.length">
+              <mat-icon>verified_user</mat-icon>
+              <p>No audit trail logs recorded yet for this employee's salary.</p>
             </td>
           </tr>
         </table>

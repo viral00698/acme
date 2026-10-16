@@ -346,3 +346,30 @@
     }
   }
 }
+
+.audit-history-card {
+  margin-top: 24px;
+
+  .audit-details-cell {
+    max-width: 400px;
+  }
+
+  .audit-details-code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.78rem;
+    color: #334155;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 4px 8px;
+    display: inline-block;
+    word-break: break-all;
+  }
+
+  .ip-cell {
+    font-family: monospace;
+    color: #64748b;
+    font-size: 0.8rem;
+  }
+}
+

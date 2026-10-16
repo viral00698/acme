@@ -11,16 +11,20 @@ export interface SalaryRecord {
   effectiveTo?: string;
   changeReason?: string;
   notes?: string;
-  version: number;
+  version?: number;
   createdByName?: string;
+  createdByUsername?: string;
   createdAt: string;
   active: boolean;
 }
 
 export interface SalaryHistory {
   employeeId: number;
+  employeeCode?: string;
   employeeName: string;
-  records: SalaryRecord[];
+  currentSalary?: SalaryRecord | null;
+  history: SalaryRecord[];
+  records?: SalaryRecord[];
 }
 
 export interface CreateSalaryRequest {

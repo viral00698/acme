@@ -31,17 +31,17 @@ export class EmployeeService {
     if (params.search && params.search.trim().length > 0) {
       httpParams = httpParams.set('search', params.search.trim());
     }
-    if (params.departmentId) {
+    if (params.departmentId !== undefined && params.departmentId !== null) {
       httpParams = httpParams.set('departmentId', params.departmentId.toString());
     }
-    if (params.countryId) {
+    if (params.countryId !== undefined && params.countryId !== null) {
       httpParams = httpParams.set('countryId', params.countryId.toString());
     }
-    if (params.jobTitleId) {
+    if (params.jobTitleId !== undefined && params.jobTitleId !== null) {
       httpParams = httpParams.set('jobTitleId', params.jobTitleId.toString());
     }
-    if (params.status) {
-      httpParams = httpParams.set('status', params.status);
+    if (params.status && params.status.trim().length > 0) {
+      httpParams = httpParams.set('status', params.status.trim());
     }
     if (params.sortBy) {
       httpParams = httpParams.set('sortBy', params.sortBy);

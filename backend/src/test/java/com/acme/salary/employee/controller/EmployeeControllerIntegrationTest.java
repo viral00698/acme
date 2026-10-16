@@ -91,4 +91,36 @@ class EmployeeControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.status").value("ON_LEAVE"));
     }
+
+    @Test
+    @WithMockUser(username = "viewer", authorities = {"ROLE_HR_VIEWER"})
+    @DisplayName("GET /api/v1/employees with filters and safe sort mappings returns filtered results")
+    void testGetEmployeesWithFiltersAndSafeSorting() throws Exception {
+        mockMvc.perform(get("/api/v1/employees")
+                        .param("departmentId", "1")
+                        .param("countryId", "1")
+                        .param("status", "ACTIVE")
+                        .param("sortBy", "fullName")
+                        .param("sortDir", "asc")
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.content").isArray())
+                .andExpect(jsonPath("$.data.pageNumber").value(0))
+                .andExpect(jsonPath("$.data.pageSize").value(10));
+    }
+
+    @Test
+    @WithMockUser(username = "viewer", authorities = {"ROLE_HR_VIEWER"})
+    @DisplayName("GET /api/v1/employees with unknown sortBy safely falls back to default sorting without 500 error")
+    void testGetEmployeesUnknownSortFallback() throws Exception {
+        mockMvc.perform(get("/api/v1/employees")
+                        .param("sortBy", "unknownPropertyThatDoesNotExist")
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.content").isArray());
+    }
 }

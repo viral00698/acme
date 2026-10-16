@@ -20,11 +20,18 @@ public final class EmployeeSpecification {
             String status) {
 
         return (root, query, cb) -> {
-            // Join fetch reference entities to avoid N+1 query issue for list queries
-            if (query != null && Long.class != query.getResultType() && long.class != query.getResultType()) {
-                root.fetch("department", JoinType.INNER);
-                root.fetch("country", JoinType.INNER);
-                root.fetch("jobTitle", JoinType.INNER);
+            // Join fetch reference entities to avoid N+1 query issue for list queries.
+            // Distinguish data query from count query to prevent duplicate joins and count failures.
+            boolean isCountQuery = query != null && (
+                    Long.class.equals(query.getResultType()) ||
+                    long.class.equals(query.getResultType()) ||
+                    Number.class.isAssignableFrom(query.getResultType())
+            );
+
+            if (!isCountQuery) {
+                root.fetch("department", JoinType.LEFT);
+                root.fetch("country", JoinType.LEFT);
+                root.fetch("jobTitle", JoinType.LEFT);
             }
 
             List<Predicate> predicates = new ArrayList<>();

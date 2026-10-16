@@ -88,19 +88,19 @@
 
         <!-- Department -->
         <ng-container matColumnDef="departmentName">
-          <th mat-header-cell *matHeaderCellDef>Department</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="departmentName">Department</th>
           <td mat-cell *matCellDef="let emp">{{ emp.departmentName }}</td>
         </ng-container>
 
         <!-- Country -->
         <ng-container matColumnDef="countryName">
-          <th mat-header-cell *matHeaderCellDef>Country</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="countryName">Country</th>
           <td mat-cell *matCellDef="let emp">{{ emp.countryName }}</td>
         </ng-container>
 
         <!-- Job Title -->
         <ng-container matColumnDef="jobTitle">
-          <th mat-header-cell *matHeaderCellDef>Job Title</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="jobTitle">Job Title</th>
           <td mat-cell *matCellDef="let emp">{{ emp.jobTitle }}</td>
         </ng-container>
 

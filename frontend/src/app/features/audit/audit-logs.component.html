@@ -13,9 +13,8 @@
         <mat-label>Entity Type</mat-label>
         <mat-select formControlName="entityName">
           <mat-option value="">All Entities</mat-option>
-          <mat-option value="Employee">Employee</mat-option>
-          <mat-option value="SalaryRecord">SalaryRecord</mat-option>
-          <mat-option value="UserAccount">UserAccount</mat-option>
+          <mat-option value="EMPLOYEE">Employee</mat-option>
+          <mat-option value="SALARY_RECORD">Salary Record</mat-option>
         </mat-select>
       </mat-form-field>
 
@@ -73,7 +72,7 @@
         <ng-container matColumnDef="entityName">
           <th mat-header-cell *matHeaderCellDef>Entity</th>
           <td mat-cell *matCellDef="let log">
-            <strong>{{ log.entityType || log.entityName }}</strong>
+            <strong>{{ log.entityName || log.entityType }}</strong>
           </td>
         </ng-container>
 
@@ -87,21 +86,21 @@
         <ng-container matColumnDef="actor">
           <th mat-header-cell *matHeaderCellDef>Actor</th>
           <td mat-cell *matCellDef="let log">
-            <span class="actor-tag">{{ log.performedBy || log.actor }}</span>
+            <span class="actor-tag">{{ log.actorUsername || log.performedBy || log.actor }}</span>
           </td>
         </ng-container>
 
         <!-- IP Address -->
         <ng-container matColumnDef="ipAddress">
           <th mat-header-cell *matHeaderCellDef>IP Address</th>
-          <td mat-cell *matCellDef="let log" class="ip-cell">{{ log.ipAddress || '127.0.0.1' }}</td>
+          <td mat-cell *matCellDef="let log" class="ip-cell">{{ log.clientIp || log.ipAddress || '127.0.0.1' }}</td>
         </ng-container>
 
         <!-- Details -->
         <ng-container matColumnDef="details">
           <th mat-header-cell *matHeaderCellDef>Change Details / Payload</th>
           <td mat-cell *matCellDef="let log" class="details-cell">
-            <span class="details-text" [title]="log.details">{{ log.details || '-' }}</span>
+            <span class="details-text" [title]="log.detailsJson || log.details">{{ log.detailsJson || log.details || '-' }}</span>
           </td>
         </ng-container>
 
@@ -109,7 +108,7 @@
         <ng-container matColumnDef="createdAt">
           <th mat-header-cell *matHeaderCellDef>Timestamp</th>
           <td mat-cell *matCellDef="let log" class="timestamp-cell">
-            {{ (log.performedAt || log.createdAt) | date:'medium' }}
+            {{ (log.createdAt || log.performedAt) | date:'medium' }}
           </td>
         </ng-container>
 
