@@ -61,9 +61,9 @@ export class EmployeeFormDialogComponent implements OnInit {
     const isEdit = this.data.isEdit;
     const emp = this.data.employee;
 
-    const deptId = emp ? ('department' in emp && typeof emp.department === 'object' ? emp.department.id : (emp as any).departmentId) : '';
-    const countryId = emp ? ('country' in emp && typeof emp.country === 'object' ? emp.country.id : (emp as any).countryId) : '';
-    const jobTitleId = emp ? ('jobTitle' in emp && typeof emp.jobTitle === 'object' ? emp.jobTitle.id : (emp as any).jobTitleId) : '';
+    const deptId = emp ? (('department' in emp && typeof emp.department === 'object' && emp.department?.id) || (emp as any).departmentId || '') : '';
+    const countryId = emp ? (('country' in emp && typeof emp.country === 'object' && emp.country?.id) || (emp as any).countryId || '') : '';
+    const jobTitleId = emp ? (('jobTitle' in emp && typeof emp.jobTitle === 'object' && (emp.jobTitle as any)?.id) || (emp as any).jobTitleId || '') : '';
 
     this.employeeForm = this.fb.group({
       employeeCode: [
@@ -73,6 +73,7 @@ export class EmployeeFormDialogComponent implements OnInit {
       firstName: [emp?.firstName || '', [Validators.required, Validators.maxLength(50)]],
       lastName: [emp?.lastName || '', [Validators.required, Validators.maxLength(50)]],
       email: [emp?.email || '', [Validators.required, Validators.email, Validators.maxLength(100)]],
+      phoneNumber: [(emp as any)?.phoneNumber || ''],
       departmentId: [deptId, [Validators.required]],
       countryId: [countryId, [Validators.required]],
       jobTitleId: [jobTitleId, [Validators.required]],
@@ -126,9 +127,11 @@ export class EmployeeFormDialogComponent implements OnInit {
         firstName: formValues.firstName,
         lastName: formValues.lastName,
         email: formValues.email,
-        departmentId: formValues.departmentId,
-        countryId: formValues.countryId,
-        jobTitleId: formValues.jobTitleId
+        phoneNumber: formValues.phoneNumber || (this.data.employee as any)?.phoneNumber || undefined,
+        departmentId: Number(formValues.departmentId),
+        countryId: Number(formValues.countryId),
+        jobTitleId: Number(formValues.jobTitleId),
+        hireDate: formValues.hireDate || this.data.employee.hireDate
       };
 
       this.employeeService.updateEmployee(this.data.employee.id, updatePayload).subscribe({
@@ -139,7 +142,12 @@ export class EmployeeFormDialogComponent implements OnInit {
         },
         error: (err) => {
           this.isLoading.set(false);
-          this.errorMessage.set(err.error?.message || 'Failed to update employee');
+          if (err.error?.fieldErrors?.length) {
+            const fieldMsgs = err.error.fieldErrors.map((f: any) => `${f.field}: ${f.message}`).join(', ');
+            this.errorMessage.set(`${err.error.message || 'Validation failed'}: ${fieldMsgs}`);
+          } else {
+            this.errorMessage.set(err.error?.message || 'Failed to update employee');
+          }
         }
       });
     } else {
@@ -148,9 +156,10 @@ export class EmployeeFormDialogComponent implements OnInit {
         firstName: formValues.firstName,
         lastName: formValues.lastName,
         email: formValues.email,
-        departmentId: formValues.departmentId,
-        countryId: formValues.countryId,
-        jobTitleId: formValues.jobTitleId,
+        phoneNumber: formValues.phoneNumber || undefined,
+        departmentId: Number(formValues.departmentId),
+        countryId: Number(formValues.countryId),
+        jobTitleId: Number(formValues.jobTitleId),
         hireDate: formValues.hireDate
       };
 
@@ -162,7 +171,12 @@ export class EmployeeFormDialogComponent implements OnInit {
         },
         error: (err) => {
           this.isLoading.set(false);
-          this.errorMessage.set(err.error?.message || 'Failed to create employee');
+          if (err.error?.fieldErrors?.length) {
+            const fieldMsgs = err.error.fieldErrors.map((f: any) => `${f.field}: ${f.message}`).join(', ');
+            this.errorMessage.set(`${err.error.message || 'Validation failed'}: ${fieldMsgs}`);
+          } else {
+            this.errorMessage.set(err.error?.message || 'Failed to create employee');
+          }
         }
       });
     }

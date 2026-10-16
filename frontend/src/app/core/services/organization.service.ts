@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, shareReplay } from 'rxjs';
+import { Observable, shareReplay, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../models/api-response.model';
 import { Department, Country, Currency, JobTitle } from '../models/organization.model';
@@ -28,6 +28,13 @@ export class OrganizationService {
   getCountries(): Observable<ApiResponse<Country[]>> {
     if (!this.countries$) {
       this.countries$ = this.http.get<ApiResponse<Country[]>>(`${this.baseUrl}/countries`).pipe(
+        map(res => ({
+          ...res,
+          data: res.data ? res.data.map(c => ({
+            ...c,
+            isoCode: c.isoCode || (c as any).code || ''
+          })) : []
+        })),
         shareReplay(1)
       );
     }

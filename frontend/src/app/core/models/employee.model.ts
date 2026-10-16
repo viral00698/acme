@@ -9,8 +9,13 @@ export interface EmployeeSummary {
   lastName: string;
   fullName?: string;
   email: string;
+  phoneNumber?: string;
+  departmentId?: number;
   departmentName: string;
+  countryId?: number;
   countryName: string;
+  countryCode?: string;
+  jobTitleId?: number;
   jobTitle: string;
   status: EmploymentStatus;
   hireDate: string;
@@ -59,6 +64,7 @@ export interface CreateEmployeeRequest {
   firstName: string;
   lastName: string;
   email: string;
+  phoneNumber?: string;
   departmentId: number;
   countryId: number;
   jobTitleId: number;
@@ -69,9 +75,11 @@ export interface UpdateEmployeeRequest {
   firstName: string;
   lastName: string;
   email: string;
+  phoneNumber?: string;
   departmentId: number;
   countryId: number;
   jobTitleId: number;
+  hireDate?: string;
 }
 
 export interface UpdateStatusRequest {

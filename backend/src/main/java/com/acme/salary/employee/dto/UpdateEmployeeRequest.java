@@ -28,6 +28,5 @@ public record UpdateEmployeeRequest(
         @NotNull(message = "Job title is required")
         Long jobTitleId,
 
-        @NotNull(message = "Hire date is required")
         LocalDate hireDate
 ) {}

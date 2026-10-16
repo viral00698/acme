@@ -56,6 +56,12 @@
       </mat-error>
     </mat-form-field>
 
+    <mat-form-field appearance="outline" class="form-field full-row">
+      <mat-label>Phone Number</mat-label>
+      <input matInput formControlName="phoneNumber" placeholder="e.g. +1-555-0100">
+      <mat-icon matPrefix>phone</mat-icon>
+    </mat-form-field>
+
     <mat-form-field appearance="outline" class="form-field">
       <mat-label>Department</mat-label>
       <mat-select formControlName="departmentId" (selectionChange)="onDepartmentChange($event.value)">
@@ -72,7 +78,7 @@
       <mat-label>Country</mat-label>
       <mat-select formControlName="countryId">
         <mat-option *ngFor="let country of countries()" [value]="country.id">
-          {{ country.name }} ({{ country.isoCode }})
+          {{ country.name }} ({{ country.isoCode || country.code }})
         </mat-option>
       </mat-select>
       <mat-error *ngIf="employeeForm.get('countryId')?.hasError('required')">

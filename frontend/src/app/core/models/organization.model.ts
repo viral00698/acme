@@ -1,6 +1,7 @@
 export interface Department {
   id: number;
-  departmentCode: string;
+  code?: string;
+  departmentCode?: string;
   name: string;
   description?: string;
   employeeCount?: number;
@@ -8,8 +9,10 @@ export interface Department {
 
 export interface Country {
   id: number;
-  isoCode: string;
+  code?: string;
+  isoCode?: string;
   name: string;
+  defaultCurrencyCode?: string;
   region?: string;
 }
 

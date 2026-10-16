@@ -149,7 +149,9 @@ public class EmployeeService {
         employee.setDepartment(department);
         employee.setCountry(country);
         employee.setJobTitle(jobTitle);
-        employee.setHireDate(request.hireDate());
+        if (request.hireDate() != null) {
+            employee.setHireDate(request.hireDate());
+        }
 
         Employee updated = employeeRepository.save(employee);
 

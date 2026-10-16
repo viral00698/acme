@@ -128,19 +128,23 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
         this.reload$.next();
       });
 
-    // 2. Immediate dropdown changes
+    // 2. Immediate dropdown changes (department, country, status)
+    // Avoid distinctUntilChanged across merged streams which suppresses valid changes
+    // when different controls consecutively emit the same value (e.g. ID 1 or null).
+    // Use queueMicrotask so the parent form's value is fully updated before triggering reload.
     merge(
       this.filterForm.get('departmentId')!.valueChanges,
       this.filterForm.get('countryId')!.valueChanges,
       this.filterForm.get('status')!.valueChanges
     )
       .pipe(
-        distinctUntilChanged(),
         takeUntil(this.destroy$)
       )
       .subscribe(() => {
-        this.resetPagination();
-        this.reload$.next();
+        queueMicrotask(() => {
+          this.resetPagination();
+          this.reload$.next();
+        });
       });
 
     // 3. Centralized request pipeline with switchMap to prevent race conditions
@@ -153,9 +157,13 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
             page: this.pageIndex(),
             size: this.pageSize(),
             search: filterVals.search?.trim() || undefined,
-            departmentId: filterVals.departmentId ?? undefined,
-            countryId: filterVals.countryId ?? undefined,
-            status: filterVals.status ?? undefined,
+            departmentId: filterVals.departmentId != null && filterVals.departmentId !== ''
+              ? Number(filterVals.departmentId)
+              : undefined,
+            countryId: filterVals.countryId != null && filterVals.countryId !== ''
+              ? Number(filterVals.countryId)
+              : undefined,
+            status: filterVals.status || undefined,
             sortBy: this.currentSortBy,
             sortDir: this.currentSortDir
           };

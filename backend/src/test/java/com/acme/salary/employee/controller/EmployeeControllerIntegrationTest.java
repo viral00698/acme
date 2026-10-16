@@ -1,6 +1,7 @@
 package com.acme.salary.employee.controller;
 
 import com.acme.salary.employee.dto.CreateEmployeeRequest;
+import com.acme.salary.employee.dto.UpdateEmployeeRequest;
 import com.acme.salary.employee.dto.UpdateStatusRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -90,6 +91,24 @@ class EmployeeControllerIntegrationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.status").value("ON_LEAVE"));
+    }
+
+    @Test
+    @WithMockUser(username = "manager", authorities = {"ROLE_HR_MANAGER"})
+    @DisplayName("PUT /api/v1/employees/1 as HR_MANAGER updates profile successfully")
+    void testUpdateEmployeeAsManager() throws Exception {
+        UpdateEmployeeRequest request = new UpdateEmployeeRequest(
+                "Jonathan", "Doeman", "john.doe@acme.corp",
+                "+1-555-0100", 1L, 1L, 1L, LocalDate.of(2023, 1, 10)
+        );
+
+        mockMvc.perform(put("/api/v1/employees/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.firstName").value("Jonathan"))
+                .andExpect(jsonPath("$.data.lastName").value("Doeman"));
     }
 
     @Test
